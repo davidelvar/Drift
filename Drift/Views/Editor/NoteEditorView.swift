@@ -170,7 +170,7 @@ struct NoteEditorView: View {
                 .inspectorColumnWidth(min: 250, ideal: 300, max: 400)
         }
         .sheet(isPresented: $showingSettings) {
-            SettingsView(appState: appState)
+            EditorSettingsView(appState: appState)
         }
     }
     

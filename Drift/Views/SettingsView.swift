@@ -1,13 +1,13 @@
 //
-//  SettingsView.swift
+//  EditorSettingsView.swift
 //  Drift
 //
-//  Settings and preferences
+//  Editor settings and preferences
 //
 
 import SwiftUI
 
-struct SettingsView: View {
+struct EditorSettingsView: View {
     @Bindable var appState: AppState
     @Environment(\.dismiss) var dismiss
     
@@ -16,7 +16,7 @@ struct SettingsView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Settings")
+                Text("Editor Settings")
                     .font(.title2)
                     .fontWeight(.semibold)
                 
@@ -33,7 +33,7 @@ struct SettingsView: View {
             Divider()
             
             Form {
-                Section("Editor") {
+                Section("Font") {
                     Picker("Font", selection: $appState.editorFont) {
                         ForEach(editorFonts, id: \.self) { font in
                             Text(font)
@@ -51,5 +51,5 @@ struct SettingsView: View {
 }
 
 #Preview {
-    SettingsView(appState: AppState())
+    EditorSettingsView(appState: AppState())
 }
