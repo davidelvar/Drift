@@ -167,7 +167,7 @@ struct NoteEditorView: View {
     
     private var editorView: some View {
         TextEditor(text: $note.content)
-            .font(.system(size: 15, design: .default))
+            .font(.custom("Menlo", size: 15))
             .scrollContentBackground(.hidden)
             .focused($isContentFocused)
             .padding(.horizontal, 20)
