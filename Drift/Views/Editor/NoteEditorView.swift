@@ -27,6 +27,8 @@ struct NoteEditorView: View {
     @Bindable var note: Note
     @Bindable var appState: AppState
     
+    @AppStorage("editorFont") private var editorFont = "Menlo"
+    
     @State private var showingInspector = false
     @State private var showingSettings = false
     @State private var selectedRange: NSRange?
@@ -170,13 +172,13 @@ struct NoteEditorView: View {
                 .inspectorColumnWidth(min: 250, ideal: 300, max: 400)
         }
         .sheet(isPresented: $showingSettings) {
-            EditorSettingsView(appState: appState)
+            SettingsView()
         }
     }
     
     private var editorView: some View {
         TextEditor(text: $note.content)
-            .font(.custom(appState.editorFont, size: 15))
+            .font(.custom(editorFont, size: 15))
             .scrollContentBackground(.hidden)
             .focused($isContentFocused)
             .padding(.horizontal, 20)

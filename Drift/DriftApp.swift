@@ -132,13 +132,23 @@ extension Notification.Name {
 // MARK: - Settings View
 struct SettingsView: View {
     @AppStorage("editorFontSize") private var editorFontSize = 15.0
+    @AppStorage("editorFont") private var editorFont = "Menlo"
     @AppStorage("showWordCount") private var showWordCount = true
     @AppStorage("autoSave") private var autoSave = true
+    
+    let editorFonts = ["Menlo", "Monaco", "Courier New"]
     
     var body: some View {
         TabView {
             Form {
                 Section("Editor") {
+                    Picker("Font", selection: $editorFont) {
+                        ForEach(editorFonts, id: \.self) { font in
+                            Text(font)
+                                .tag(font)
+                        }
+                    }
+                    
                     Slider(value: $editorFontSize, in: 12...24, step: 1) {
                         Text("Font Size: \(Int(editorFontSize))")
                     }
