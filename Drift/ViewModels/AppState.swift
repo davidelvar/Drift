@@ -24,6 +24,7 @@ final class AppState {
     // Editor state
     var isEditing: Bool = false
     var editorMode: EditorMode = .Edit
+    var editorFont: String = "Menlo"
     
     init() {}
     

@@ -28,6 +28,7 @@ struct NoteEditorView: View {
     @Bindable var appState: AppState
     
     @State private var showingInspector = false
+    @State private var showingSettings = false
     @State private var selectedRange: NSRange?
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isContentFocused: Bool
@@ -153,6 +154,11 @@ struct NoteEditorView: View {
                 }
                 .help("Note Info")
                 
+                Button(action: { showingSettings.toggle() }) {
+                    Image(systemName: "gear")
+                }
+                .help("Settings")
+                
                 ShareLink(item: note.content) {
                     Image(systemName: "square.and.arrow.up")
                 }
@@ -163,11 +169,14 @@ struct NoteEditorView: View {
             NoteInspectorView(note: note)
                 .inspectorColumnWidth(min: 250, ideal: 300, max: 400)
         }
+        .sheet(isPresented: $showingSettings) {
+            SettingsView(appState: appState)
+        }
     }
     
     private var editorView: some View {
         TextEditor(text: $note.content)
-            .font(.custom("Menlo", size: 15))
+            .font(.custom(appState.editorFont, size: 15))
             .scrollContentBackground(.hidden)
             .focused($isContentFocused)
             .padding(.horizontal, 20)
