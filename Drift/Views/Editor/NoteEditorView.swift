@@ -9,6 +9,56 @@ import SwiftUI
 import SwiftData
 import AppKit
 
+// MARK: - Line Number Ruler View
+class LineNumberView: NSRulerView {
+    weak var textView: NSTextView?
+    private let lineNumberColor = NSColor(red: 0.576, green: 0.635, blue: 0.792, alpha: 1.0) // #92a2ca
+    private let backgroundColor = NSColor(red: 0.09, green: 0.09, blue: 0.12, alpha: 1.0) // #161618
+    
+    init(textView: NSTextView) {
+        self.textView = textView
+        super.init(scrollView: textView.enclosingScrollView!, orientation: .verticalRuler)
+        self.ruleThickness = 50
+    }
+    
+    required init(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+    
+    override func draw(_ dirtyRect: NSRect) {
+        backgroundColor.setFill()
+        dirtyRect.fill()
+        
+        guard let textView = textView, let layoutManager = textView.layoutManager else {
+            return
+        }
+        
+        let textFont = textView.font ?? NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
+        let lineHeight = layoutManager.defaultLineHeight(for: textFont)
+        let visibleRect = textView.visibleRect
+        
+        let firstLine = Int(visibleRect.origin.y / lineHeight)
+        let lastLine = Int((visibleRect.origin.y + visibleRect.height) / lineHeight) + 1
+        
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .right
+        
+        for lineNumber in max(1, firstLine)...lastLine {
+            let yPosition = CGFloat(lineNumber - 1) * lineHeight
+            let lineRect = CGRect(x: 0, y: yPosition, width: ruleThickness - 4, height: lineHeight)
+            
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: textFont,
+                .foregroundColor: lineNumberColor,
+                .paragraphStyle: paragraphStyle
+            ]
+            
+            let lineString = NSAttributedString(string: "\(lineNumber)", attributes: attributes)
+            lineString.draw(in: lineRect)
+        }
+    }
+}
+
 enum EditorMode: String, CaseIterable {
     case Edit
     case Preview
@@ -617,14 +667,15 @@ struct STTextViewRepresentable: NSViewRepresentable {
     var smartDashes: Bool = false
     
     func makeNSView(context: Context) -> NSView {
-        let scrollView = NSScrollView()
         let textView = NSTextView()
         
+        // Set initial text
         textView.string = text
+        
+        // Configure font
         if let font = font {
             textView.font = font
         } else {
-            // Fallback fonts if none provided
             let fallbacks = ["Monaco", "Menlo", "SF Mono", "Courier New", "Andale Mono"]
             for fontName in fallbacks {
                 if let fallbackFont = NSFont(name: fontName, size: 14) {
@@ -632,46 +683,61 @@ struct STTextViewRepresentable: NSViewRepresentable {
                     break
                 }
             }
-            // Final fallback to system monospace
             if textView.font == nil {
                 textView.font = NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
             }
         }
+        
+        // Configure colors
         textView.textColor = textColor
         textView.backgroundColor = backgroundColor
-        textView.delegate = context.coordinator
+        
+        // Configure editor behavior
         textView.isEditable = isEditable
         textView.isSelectable = true
+        textView.allowsUndo = true
+        textView.enabledTextCheckingTypes = 0
         
-        // Store reference to textView in coordinator for line highlighting
-        context.coordinator.textView = textView
-        context.coordinator.highlightSelectedLine = highlightSelectedLine
+        // Configure text wrapping
+        if let textContainer = textView.textContainer {
+            textContainer.widthTracksTextView = wrapLines
+            if !wrapLines {
+                textContainer.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+            }
+        }
+        textView.isHorizontallyResizable = !wrapLines
+        textView.isVerticallyResizable = true
         
-        // Markdown-specific settings
+        // Configure line height
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineHeightMultiple = lineHeightMultiple
+        paragraphStyle.defaultTabInterval = CGFloat(tabWidth * 8)
+        textView.defaultParagraphStyle = paragraphStyle
+        
+        // Configure spelling/grammar
         textView.isAutomaticSpellingCorrectionEnabled = spellCheck
         textView.isAutomaticQuoteSubstitutionEnabled = smartQuotes
         textView.isAutomaticDashSubstitutionEnabled = smartDashes
         
-        // Typography settings for better markdown readability
-        let paragraphStyle = NSParagraphStyle.default.mutableCopy() as! NSMutableParagraphStyle
-        paragraphStyle.lineHeightMultiple = lineHeightMultiple
-        paragraphStyle.defaultTabInterval = CGFloat(tabWidth * 8)  // Convert to points
-        textView.defaultParagraphStyle = paragraphStyle
+        // Set delegate
+        textView.delegate = context.coordinator
+        context.coordinator.textView = textView
+        context.coordinator.highlightSelectedLine = highlightSelectedLine
         
-        // Configure scroll view
+        // Configure scroll view with line numbers
+        let scrollView = NSScrollView()
         scrollView.documentView = textView
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = !wrapLines
         scrollView.autohidesScrollers = true
-        scrollView.drawsBackground = true
         scrollView.backgroundColor = backgroundColor
         
-        // Configure text view for markdown editing
-        textView.isHorizontallyResizable = !wrapLines
-        textView.isVerticallyResizable = true
-        textView.textContainer?.widthTracksTextView = wrapLines
+        // Add line number ruler
+        let lineNumberView = LineNumberView(textView: textView)
+        scrollView.verticalRulerView = lineNumberView
+        scrollView.rulersVisible = showLineNumbers
         
-        // Apply initial markdown syntax highlighting
+        // Apply initial syntax highlighting
         if let storage = textView.textStorage {
             MarkdownHighlighter.highlight(text, in: storage)
         }
@@ -688,42 +754,42 @@ struct STTextViewRepresentable: NSViewRepresentable {
         if textView.string != text {
             let cursorPosition = textView.selectedRange.location
             textView.string = text
-            // Apply markdown syntax highlighting
+            
             if let storage = textView.textStorage {
                 MarkdownHighlighter.highlight(text, in: storage)
             }
-            // Restore cursor position if still valid
+            
             if cursorPosition <= text.count {
                 textView.setSelectedRange(NSRange(location: cursorPosition, length: 0))
             }
         }
         
-        // Update dynamic settings
+        // Update settings
         textView.isAutomaticSpellingCorrectionEnabled = spellCheck
         textView.isAutomaticQuoteSubstitutionEnabled = smartQuotes
         textView.isAutomaticDashSubstitutionEnabled = smartDashes
         
-        // Update font if needed
         if let font = font {
             textView.font = font
         }
         
-        let paragraphStyle = NSParagraphStyle.default.mutableCopy() as! NSMutableParagraphStyle
+        let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineHeightMultiple = lineHeightMultiple
         paragraphStyle.defaultTabInterval = CGFloat(tabWidth * 8)
         textView.defaultParagraphStyle = paragraphStyle
         
         scrollView.hasHorizontalScroller = !wrapLines
         textView.isHorizontallyResizable = !wrapLines
-        textView.textContainer?.widthTracksTextView = wrapLines
         
-        // Update highlight selected line setting
-        context.coordinator.highlightSelectedLine = highlightSelectedLine
-        if highlightSelectedLine {
-            context.coordinator.updateLineHighlight(textView)
-        } else {
-            context.coordinator.clearLineHighlight(textView)
+        if let textContainer = textView.textContainer {
+            textContainer.widthTracksTextView = wrapLines
+            if !wrapLines {
+                textContainer.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+            }
         }
+        
+        scrollView.rulersVisible = showLineNumbers
+        context.coordinator.highlightSelectedLine = highlightSelectedLine
     }
     
     func makeCoordinator() -> Coordinator {
@@ -743,97 +809,17 @@ struct STTextViewRepresentable: NSViewRepresentable {
             guard let textView = notification.object as? NSTextView else { return }
             self.text = textView.string
             
-            // Apply markdown syntax highlighting first
             if let storage = textView.textStorage {
                 MarkdownHighlighter.highlight(textView.string, in: storage)
-            }
-            
-            // Update line highlighting after markdown (so it layers on top)
-            if highlightSelectedLine {
-                updateLineHighlight(textView)
-            } else {
-                clearLineHighlight(textView)
             }
         }
         
         func textViewDidChangeSelection(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
-            
-            // Update line highlighting on selection change
-            if highlightSelectedLine {
-                updateLineHighlight(textView)
-            } else {
-                clearLineHighlight(textView)
+            // Trigger ruler redraw to highlight current line
+            if let rulerView = (textView.enclosingScrollView?.verticalRulerView as? LineNumberView) {
+                rulerView.needsDisplay = true
             }
-        }
-        
-        func updateLineHighlight(_ textView: NSTextView) {
-            guard let storage = textView.textStorage else { return }
-            
-            let selectedRange = textView.selectedRange
-            if selectedRange.location == NSNotFound {
-                clearLineHighlight(textView)
-                return
-            }
-            
-            // Clear all previous highlights
-            let fullRange = NSRange(location: 0, length: storage.length)
-            storage.removeAttribute(.backgroundColor, range: fullRange)
-            
-            // Get the line range
-            let text = storage.string
-            let nsText = text as NSString
-            
-            // Find line boundaries
-            var lineStart = selectedRange.location
-            while lineStart > 0 && nsText.character(at: lineStart - 1) != 10 {
-                lineStart -= 1
-            }
-            
-            var lineEnd = selectedRange.location
-            while lineEnd < nsText.length && nsText.character(at: lineEnd) != 10 {
-                lineEnd += 1
-            }
-            
-            // Create a paragraph style with a background that extends to fill available space
-            let highlightColor = NSColor(red: 0.2, green: 0.2, blue: 0.25, alpha: 0.5)
-            
-            // Apply background to the entire line
-            let highlightAttributes: [NSAttributedString.Key: Any] = [
-                .backgroundColor: highlightColor
-            ]
-            
-            // Apply the highlight to the line range
-            let highlightRange = NSRange(location: lineStart, length: lineEnd - lineStart)
-            storage.addAttributes(highlightAttributes, range: highlightRange)
-        }
-        
-        func clearLineHighlight(_ textView: NSTextView) {
-            guard let storage = textView.textStorage else { return }
-            let range = NSRange(location: 0, length: storage.length)
-            storage.removeAttribute(.backgroundColor, range: range)
-        }
-        
-        // Support smart markdown formatting
-        func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
-            if commandSelector == #selector(NSTextView.insertNewline(_:)) {
-                // Handle smart list continuation (- item -> new line gets -)
-                let currentLine = getCurrentLine(from: textView)
-                if currentLine.trimmingCharacters(in: .whitespaces).hasPrefix("- ") ||
-                   currentLine.trimmingCharacters(in: .whitespaces).hasPrefix("* ") {
-                    textView.insertNewline(nil)
-                    let indent = currentLine.prefix(while: { $0.isWhitespace })
-                    textView.insertText(indent + "- ", replacementRange: textView.selectedRange)
-                    return true
-                }
-            }
-            return false
-        }
-        
-        private func getCurrentLine(from textView: NSTextView) -> String {
-            let text = textView.string as NSString
-            let range = text.lineRange(for: NSRange(location: textView.selectedRange.location, length: 0))
-            return text.substring(with: range)
         }
     }
 }
