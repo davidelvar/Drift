@@ -16,48 +16,54 @@ extension LanguageConfiguration {
     ///
     public static func markdown(_ languageService: LanguageService? = nil) -> LanguageConfiguration {
         
-        // MARK: - Regex Patterns using standard regex strings
+        // MARK: - Regex Patterns for Markdown
         
-        // Inline code: `code`
-        let inlineCodeRegex = Regex {
-            "`[^`]+`"
+        // Inline code: backtick-enclosed text
+        // Matches: `code text`
+        let stringRegex = Regex {
+            /`[^`]+`/
         }
         
-        // Code blocks: ```language ... ```
-        let codeBlockRegex = Regex {
-            "```[a-z]*\\n([^`]*\\n)*```"
+        // Code blocks: triple backtick fences
+        // Matches: ```
+        let characterRegex = Regex {
+            /```/
         }
         
-        // Links: [text](url) or [text](url "title")
-        let linkRegex = Regex {
-            "\\[[^\\]]+\\]\\([^)]+\\)"
+        // Links: [text](url) pattern
+        // Matches: [link text](https://example.com)
+        let identifierRegex = Regex {
+            /\[[^\]]*\]\([^\)]*\)/
         }
         
-        // Operator regex for markdown formatting markers
+        // Markdown operators: special characters for formatting
+        // Matches: **, __, *, _, ~~, #, -, +, >
         let operatorRegex = Regex {
-            "\\*{1,2}|_{1,2}|`|~{2}|#|-|\\+|\\d+\\."
+            ChoiceOf {
+                "\\*\\*"   // bold **
+                "__"       // bold __
+                "~~"       // strikethrough  
+                /[*_#\-+>]/ // individual operators
+            }
         }
         
-        // Number regex for code block markers and list numbers
+        // Numbers: for lists
         let numberRegex = Regex {
-            "\\d+"
+            /\d+/
         }
         
         return LanguageConfiguration(
             name: "Markdown",
             supportsSquareBrackets: true,
             supportsCurlyBrackets: false,
-            stringRegex: inlineCodeRegex,           // Inline code highlighted as strings
-            characterRegex: codeBlockRegex,         // Code blocks highlighted as characters
-            numberRegex: numberRegex,               // List numbers
+            stringRegex: stringRegex,               // Inline code → strings (green)
+            characterRegex: characterRegex,         // Code fences → characters (yellow)
+            numberRegex: numberRegex,               // Numbers for lists
             singleLineComment: nil,
             nestedComment: (open: "<!--", close: "-->"),
-            identifierRegex: linkRegex,             // Links highlighted as identifiers
-            operatorRegex: operatorRegex,           // Markdown syntax operators
-            reservedIdentifiers: [
-                // Markdown special patterns that should be highlighted
-                "**", "__", "*", "_", "`", "~~", "#", "-", "+", ">"
-            ],
+            identifierRegex: identifierRegex,       // Links → identifiers (cyan)
+            operatorRegex: operatorRegex,           // Markdown operators (orange)
+            reservedIdentifiers: [],
             reservedOperators: [
                 "**", "__", "*", "_", "`", "~~", "#", "-", "+", ">"
             ],
