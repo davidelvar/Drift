@@ -66,33 +66,31 @@ struct SidebarView: View {
             // User Folders Section
             Section("Folders") {
                 ForEach(folders) { folder in
-                    if renamingFolderId == folder.id {
-                        TextField("Folder name", text: $renamingFolderName)
-                            .textFieldStyle(.plain)
-                            .onSubmit {
-                                renameFolder(folder)
-                            }
-                            .onExitCommand {
-                                renamingFolderId = nil
-                                renamingFolderName = ""
-                            }
-                    } else {
-                        SidebarRow(item: .folder(folder), count: folderCount(folder))
-                            .tag(SidebarItem.folder(folder))
-                            .onDoubleClick {
-                                renamingFolderId = folder.id.uuidString
-                                renamingFolderName = folder.name
-                            }
-                            .contextMenu {
-                                Button("Rename", systemImage: "pencil") {
-                                    renamingFolderId = folder.id.uuidString
-                                    renamingFolderName = folder.name
-                                }
-                                Button("Delete", systemImage: "trash", role: .destructive) {
-                                    deleteFolder(folder)
-                                }
-                            }
-                    }
+                    FolderRow(
+                        folder: folder,
+                        count: folderCount(folder),
+                        isRenaming: renamingFolderId == folder.id,
+                        renamingName: $renamingFolderName,
+                        onDoubleClick: {
+                            renamingFolderId = folder.id.uuidString
+                            renamingFolderName = folder.name
+                        },
+                        onRename: {
+                            renameFolder(folder)
+                        },
+                        onRenameCancel: {
+                            renamingFolderId = nil
+                            renamingFolderName = ""
+                        },
+                        onDelete: {
+                            deleteFolder(folder)
+                        },
+                        onContextMenuRename: {
+                            renamingFolderId = folder.id.uuidString
+                            renamingFolderName = folder.name
+                        }
+                    )
+                    .tag(SidebarItem.folder(folder))
                 }
                 
                 if isAddingFolder {
@@ -182,6 +180,39 @@ struct SidebarView: View {
         
         for folder in Folder.createDefaultFolders() {
             modelContext.insert(folder)
+        }
+    }
+}
+
+// MARK: - Folder Row
+struct FolderRow: View {
+    let folder: Folder
+    let count: Int
+    let isRenaming: Bool
+    @Binding var renamingName: String
+    let onDoubleClick: () -> Void
+    let onRename: () -> Void
+    let onRenameCancel: () -> Void
+    let onDelete: () -> Void
+    let onContextMenuRename: () -> Void
+    
+    var body: some View {
+        if isRenaming {
+            TextField("Folder name", text: $renamingName)
+                .textFieldStyle(.plain)
+                .onSubmit(onRename)
+                .onExitCommand(onRenameCancel)
+        } else {
+            SidebarRow(item: .folder(folder), count: count)
+                .onDoubleClick(perform: onDoubleClick)
+                .contextMenu {
+                    Button("Rename", systemImage: "pencil") {
+                        onContextMenuRename()
+                    }
+                    Button("Delete", systemImage: "trash", role: .destructive) {
+                        onDelete()
+                    }
+                }
         }
     }
 }
