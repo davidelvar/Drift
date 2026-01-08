@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5D6A98C72F104FDE00BD7716 /* STTextView in Frameworks */ = {isa = PBXBuildFile; productRef = 5D6A98C62F104FDE00BD7716 /* STTextView */; };
 		5D7784C72F0F7A7C008EF015 /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = 5DC585EC2F0F76AD0050AC0B /* Markdown */; };
 		5D7784C82F0F7A7C008EF015 /* Splash in Frameworks */ = {isa = PBXBuildFile; productRef = 5DC585ED2F0F76B00050AC0B /* Splash */; };
 		5D7784FC2F0FA64C008EF015 /* CodeEditorView in Frameworks */ = {isa = PBXBuildFile; productRef = 5D7784FB2F0FA64C008EF015 /* CodeEditorView */; };
@@ -66,6 +67,7 @@
 				5D7784FC2F0FA64C008EF015 /* CodeEditorView in Frameworks */,
 				5D7784C82F0F7A7C008EF015 /* Splash in Frameworks */,
 				5D7784C72F0F7A7C008EF015 /* Markdown in Frameworks */,
+				5D6A98C72F104FDE00BD7716 /* STTextView in Frameworks */,
 				8C8FF1A7AF5F40E0B9C5073D /* MarkdownUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -87,12 +89,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5D6A98C52F104FDE00BD7716 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		6378F0DF2F0F0D0700677FA7 = {
 			isa = PBXGroup;
 			children = (
 				6378F0EA2F0F0D0700677FA7 /* Drift */,
 				6378F0F82F0F0D0800677FA7 /* DriftTests */,
 				6378F1022F0F0D0800677FA7 /* DriftUITests */,
+				5D6A98C52F104FDE00BD7716 /* Frameworks */,
 				6378F0E92F0F0D0700677FA7 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -132,6 +142,7 @@
 				5D7784FB2F0FA64C008EF015 /* CodeEditorView */,
 				5D7784FD2F0FA64C008EF015 /* LanguageSupport */,
 				8C8FF1A7AF5F40E0B9C5073C /* MarkdownUI */,
+				5D6A98C62F104FDE00BD7716 /* STTextView */,
 			);
 			productName = Drift;
 			productReference = 6378F0E82F0F0D0700677FA7 /* Drift.app */;
@@ -645,6 +656,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		5D6A98C62F104FDE00BD7716 /* STTextView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D7785D62F0FBDE1008EF015 /* XCRemoteSwiftPackageReference "STTextView" */;
+			productName = STTextView;
+		};
 		5D7784FB2F0FA64C008EF015 /* CodeEditorView */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5D7784FA2F0FA64C008EF015 /* XCRemoteSwiftPackageReference "CodeEditorView" */;

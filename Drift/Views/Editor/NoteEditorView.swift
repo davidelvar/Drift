@@ -54,7 +54,7 @@ struct NoteEditorView: View {
     
     @State private var showingInspector = false
     @State private var selectedRange: NSRange?
-    @State private var originalContent: String = ""
+    @State private var previousContent: String = ""
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isContentFocused: Bool
     
@@ -219,21 +219,22 @@ struct NoteEditorView: View {
             smartDashes: smartDashes
         )
         .frame(minWidth: 200, minHeight: 200)
+        .padding(.leading, 24)
+        .padding(.vertical, 12)
         .focused($isContentFocused)
+        .onChange(of: note.id) { _, _ in
+            // When note changes, update previousContent to current content
+            previousContent = note.content
+        }
         .onChange(of: note.content) { oldValue, newValue in
-            // Only update if content actually changed from original
-            if originalContent.isEmpty {
-                originalContent = oldValue
-            }
-            if newValue != originalContent {
+            // Only update timestamp if content actually changed from what we remember
+            // This prevents updates when just switching to a note
+            if newValue != previousContent && newValue != oldValue {
                 note.updatedAt = Date()
                 note.title = note.extractedTitle
             }
+            previousContent = newValue
         }
-            .onAppear {
-                // Store original content when note loads
-                originalContent = note.content
-            }
     }
     
     // Dracula dark theme colors
@@ -314,6 +315,7 @@ struct FormatButton: View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: 14))
+                .foregroundStyle(Color(red: 0.384, green: 0.447, blue: 0.643))
                 .frame(width: 28, height: 28)
                 .contentShape(Rectangle())
                 .background(
@@ -619,125 +621,69 @@ struct STTextViewRepresentable: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView {
         let textView = NSTextView()
         
-        // Set initial text
         textView.string = text
-        
-        // Configure font
-        if let font = font {
-            textView.font = font
-        } else {
-            let fallbacks = ["Monaco", "Menlo", "SF Mono", "Courier New", "Andale Mono"]
-            for fontName in fallbacks {
-                if let fallbackFont = NSFont(name: fontName, size: 14) {
-                    textView.font = fallbackFont
-                    break
-                }
-            }
-            if textView.font == nil {
-                textView.font = NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
-            }
-        }
-        
-        // Configure colors
+        textView.font = font ?? NSFont(name: "Monaco", size: 14) ?? NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
         textView.textColor = textColor
         textView.backgroundColor = backgroundColor
-        
-        // Configure editor behavior
+        textView.delegate = context.coordinator
         textView.isEditable = isEditable
         textView.isSelectable = true
-        textView.allowsUndo = true
-        textView.enabledTextCheckingTypes = 0
         
-        // Configure text wrapping
-        if let textContainer = textView.textContainer {
-            textContainer.widthTracksTextView = wrapLines
-            if !wrapLines {
-                textContainer.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
-            }
+        // Configure text container for proper line selection
+        textView.textContainer?.widthTracksTextView = wrapLines
+        if !wrapLines {
+            textView.textContainer?.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         }
-        textView.isHorizontallyResizable = !wrapLines
-        textView.isVerticallyResizable = true
         
-        // Configure line height
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineHeightMultiple = lineHeightMultiple
-        paragraphStyle.defaultTabInterval = CGFloat(tabWidth * 8)
-        textView.defaultParagraphStyle = paragraphStyle
-        
-        // Configure spelling/grammar
-        textView.isAutomaticSpellingCorrectionEnabled = spellCheck
-        textView.isAutomaticQuoteSubstitutionEnabled = smartQuotes
-        textView.isAutomaticDashSubstitutionEnabled = smartDashes
-        
-        // Set delegate
-        textView.delegate = context.coordinator
-        context.coordinator.textView = textView
-        context.coordinator.highlightSelectedLine = highlightSelectedLine
-        
-        // Configure scroll view with line numbers
-        let scrollView = NSScrollView()
-        scrollView.documentView = textView
-        scrollView.hasVerticalScroller = true
-        scrollView.hasHorizontalScroller = !wrapLines
-        scrollView.autohidesScrollers = true
-        scrollView.backgroundColor = backgroundColor
-        
-        // Configure line numbers visibility (built-in NSTextView support)
-        scrollView.rulersVisible = showLineNumbers
-        
-        // Apply initial syntax highlighting
+        // Apply markdown highlighting
         if let storage = textView.textStorage {
             MarkdownHighlighter.highlight(text, in: storage)
         }
+        
+        // Create scroll view
+        let scrollView = NSScrollView()
+        scrollView.documentView = textView
+        scrollView.rulersVisible = false
         
         return scrollView
     }
     
     func updateNSView(_ nsView: NSView, context: Context) {
         guard let scrollView = nsView as? NSScrollView,
-              let textView = scrollView.documentView as? NSTextView else {
-            return
-        }
+              let textView = scrollView.documentView as? NSTextView else { return }
         
+        // Always sync the coordinator binding to ensure it's current
+        context.coordinator.textBinding = $text
+        
+        // Update text if changed
         if textView.string != text {
-            let cursorPosition = textView.selectedRange.location
+            let cursorPosition = textView.selectedRange().location
             textView.string = text
             
+            // Re-apply highlighting
             if let storage = textView.textStorage {
                 MarkdownHighlighter.highlight(text, in: storage)
             }
             
+            // Restore cursor position if valid
             if cursorPosition <= text.count {
                 textView.setSelectedRange(NSRange(location: cursorPosition, length: 0))
+            } else {
+                // Move cursor to end if text is shorter than before
+                textView.setSelectedRange(NSRange(location: text.count, length: 0))
             }
         }
         
-        // Update settings
-        textView.isAutomaticSpellingCorrectionEnabled = spellCheck
-        textView.isAutomaticQuoteSubstitutionEnabled = smartQuotes
-        textView.isAutomaticDashSubstitutionEnabled = smartDashes
-        
+        // Update font
         if let font = font {
             textView.font = font
         }
         
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineHeightMultiple = lineHeightMultiple
-        paragraphStyle.defaultTabInterval = CGFloat(tabWidth * 8)
-        textView.defaultParagraphStyle = paragraphStyle
-        
-        scrollView.hasHorizontalScroller = !wrapLines
-        textView.isHorizontallyResizable = !wrapLines
-        
-        if let textContainer = textView.textContainer {
-            textContainer.widthTracksTextView = wrapLines
-            if !wrapLines {
-                textContainer.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
-            }
+        // Update text container wrapping
+        textView.textContainer?.widthTracksTextView = wrapLines
+        if !wrapLines {
+            textView.textContainer?.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         }
-        
-        scrollView.rulersVisible = showLineNumbers
-        context.coordinator.highlightSelectedLine = highlightSelectedLine
     }
     
     func makeCoordinator() -> Coordinator {
@@ -745,26 +691,24 @@ struct STTextViewRepresentable: NSViewRepresentable {
     }
     
     class Coordinator: NSObject, NSTextViewDelegate {
-        @Binding var text: String
-        weak var textView: NSTextView?
-        var highlightSelectedLine: Bool = true
+        var textBinding: Binding<String>
         
         init(text: Binding<String>) {
-            self._text = text
+            self.textBinding = text
         }
         
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
-            self.text = textView.string
             
+            // Only update if text actually changed to avoid feedback loops
+            if textView.string != textBinding.wrappedValue {
+                textBinding.wrappedValue = textView.string
+            }
+            
+            // Highlight markdown on change
             if let storage = textView.textStorage {
                 MarkdownHighlighter.highlight(textView.string, in: storage)
             }
-        }
-        
-        func textViewDidChangeSelection(_ notification: Notification) {
-            guard let textView = notification.object as? NSTextView else { return }
-            // Selection changed
         }
     }
 }

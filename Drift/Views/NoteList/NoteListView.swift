@@ -252,10 +252,11 @@ struct NoteRowView: View {
     @State private var isHovering = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(note.extractedTitle)
-                    .font(.headline)
+                    .font(.system(.body, design: .default).weight(.semibold))
+                    .foregroundStyle(Color(red: 0.973, green: 0.973, blue: 0.898))
                     .lineLimit(1)
                 
                 Spacer()
@@ -276,12 +277,15 @@ struct NoteRowView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
+                .lineSpacing(1.2)
             
             Text(note.updatedAt.formatted(date: .abbreviated, time: .shortened))
-                .font(.caption)
-                .foregroundStyle(.tertiary)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color(red: 0.384, green: 0.447, blue: 0.643))
+                .lineSpacing(0.8)
         }
-        .padding(.vertical, 8)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
         .onHover { hovering in
             isHovering = hovering
         }
