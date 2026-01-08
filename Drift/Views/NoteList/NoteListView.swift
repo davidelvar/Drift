@@ -254,7 +254,7 @@ struct NoteRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text(note.title.isEmpty ? "Untitled" : note.title)
+                Text(note.extractedTitle)
                     .font(.headline)
                     .lineLimit(1)
                 

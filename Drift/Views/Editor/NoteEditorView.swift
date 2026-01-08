@@ -34,35 +34,6 @@ struct NoteEditorView: View {
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isContentFocused: Bool
     
-    // Extract title from highest level heading
-    private var extractedTitle: String {
-        let lines = note.content.split(separator: "\n", omittingEmptySubsequences: false)
-        
-        // Find highest level heading (lowest # count)
-        var highestLevel = 7 // Start higher than h6
-        var foundTitle = ""
-        
-        for line in lines {
-            let trimmedLine = line.trimmingCharacters(in: .whitespaces)
-            
-            // Check if line starts with # (heading)
-            if trimmedLine.hasPrefix("#") {
-                let hashCount = trimmedLine.prefix(while: { $0 == "#" }).count
-                
-                if hashCount < highestLevel {
-                    highestLevel = hashCount
-                    // Extract text after the # symbols
-                    let titleText = trimmedLine
-                        .dropFirst(hashCount)
-                        .trimmingCharacters(in: .whitespaces)
-                    foundTitle = String(titleText)
-                }
-            }
-        }
-        
-        return foundTitle.isEmpty ? "Untitled" : foundTitle
-    }
-    
     var body: some View {
         VStack(spacing: 0) {
             // Metadata bar with mode picker on left
@@ -213,7 +184,7 @@ struct NoteEditorView: View {
             .onChange(of: note.content) { _, _ in
                 note.updatedAt = Date()
                 // Update note title to match the extracted heading
-                note.title = extractedTitle
+                note.title = note.extractedTitle
             }
     }
     

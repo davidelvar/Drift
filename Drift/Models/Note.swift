@@ -40,6 +40,34 @@ final class Note {
         content.count
     }
     
+    var extractedTitle: String {
+        let lines = content.split(separator: "\n", omittingEmptySubsequences: false)
+        
+        // Find highest level heading (lowest # count)
+        var highestLevel = 7 // Start higher than h6
+        var foundTitle = ""
+        
+        for line in lines {
+            let trimmedLine = line.trimmingCharacters(in: .whitespaces)
+            
+            // Check if line starts with # (heading)
+            if trimmedLine.hasPrefix("#") {
+                let hashCount = trimmedLine.prefix(while: { $0 == "#" }).count
+                
+                if hashCount < highestLevel {
+                    highestLevel = hashCount
+                    // Extract text after the # symbols
+                    let titleText = trimmedLine
+                        .dropFirst(hashCount)
+                        .trimmingCharacters(in: .whitespaces)
+                    foundTitle = String(titleText)
+                }
+            }
+        }
+        
+        return foundTitle.isEmpty ? "Untitled" : foundTitle
+    }
+    
     init(
         title: String = "Untitled",
         content: String = "",
