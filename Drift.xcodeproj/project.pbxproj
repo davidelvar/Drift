@@ -11,6 +11,7 @@
 		5D7784C82F0F7A7C008EF015 /* Splash in Frameworks */ = {isa = PBXBuildFile; productRef = 5DC585ED2F0F76B00050AC0B /* Splash */; };
 		5D7784FC2F0FA64C008EF015 /* CodeEditorView in Frameworks */ = {isa = PBXBuildFile; productRef = 5D7784FB2F0FA64C008EF015 /* CodeEditorView */; };
 		5D7784FE2F0FA64C008EF015 /* LanguageSupport in Frameworks */ = {isa = PBXBuildFile; productRef = 5D7784FD2F0FA64C008EF015 /* LanguageSupport */; };
+		5D7785D72F0FBDE1008EF015 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		8C8FF1A7AF5F40E0B9C5073D /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 8C8FF1A7AF5F40E0B9C5073C /* MarkdownUI */; };
 /* End PBXBuildFile section */
 
@@ -60,6 +61,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5D7785D72F0FBDE1008EF015 /* (null) in Frameworks */,
 				5D7784FE2F0FA64C008EF015 /* LanguageSupport in Frameworks */,
 				5D7784FC2F0FA64C008EF015 /* CodeEditorView in Frameworks */,
 				5D7784C82F0F7A7C008EF015 /* Splash in Frameworks */,
@@ -218,6 +220,7 @@
 				5DC585EB2F0F769C0050AC0B /* XCRemoteSwiftPackageReference "swift-markdown" */,
 				5D7784FA2F0FA64C008EF015 /* XCRemoteSwiftPackageReference "CodeEditorView" */,
 				5D7784FF2F0FADA1008EF015 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
+				5D7785D62F0FBDE1008EF015 /* XCRemoteSwiftPackageReference "STTextView" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 6378F0E92F0F0D0700677FA7 /* Products */;
@@ -613,6 +616,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 2.4.1;
+			};
+		};
+		5D7785D62F0FBDE1008EF015 /* XCRemoteSwiftPackageReference "STTextView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krzyzanowskim/STTextView";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.3.4;
 			};
 		};
 		5DC585EA2F0F55600050AC0B /* XCRemoteSwiftPackageReference "Splash" */ = {

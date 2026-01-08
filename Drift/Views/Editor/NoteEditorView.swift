@@ -8,8 +8,6 @@
 import SwiftUI
 import SwiftData
 import AppKit
-import CodeEditorView
-import LanguageSupport
 
 enum EditorMode: String, CaseIterable {
     case Edit
@@ -34,7 +32,6 @@ struct NoteEditorView: View {
     @State private var showingInspector = false
     @State private var selectedRange: NSRange?
     @State private var originalContent: String = ""
-    @State private var editorPosition: CodeEditor.Position = CodeEditor.Position()
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isContentFocused: Bool
     
@@ -184,20 +181,24 @@ struct NoteEditorView: View {
     }
     
     private var editorView: some View {
-        CodeEditor(text: $note.content, position: $editorPosition, messages: .constant(Set()), language: .none)
-            .environment(\.codeEditorTheme, draculaTheme)
-            .focused($isContentFocused)
-            .withSplashHighlighting(text: note.content)
-            .onChange(of: note.content) { oldValue, newValue in
-                // Only update if content actually changed from original
-                if originalContent.isEmpty {
-                    originalContent = oldValue
-                }
-                if newValue != originalContent {
-                    note.updatedAt = Date()
-                    note.title = note.extractedTitle
-                }
+        STTextViewRepresentable(
+            text: $note.content,
+            font: NSFont(name: editorFont, size: 14),
+            textColor: NSColor(red: 0.973, green: 0.973, blue: 0.949, alpha: 1.0),
+            backgroundColor: NSColor(red: 0.0745, green: 0.0784, blue: 0.1098, alpha: 1.0)
+        )
+        .frame(minWidth: 200, minHeight: 200)
+        .focused($isContentFocused)
+        .onChange(of: note.content) { oldValue, newValue in
+            // Only update if content actually changed from original
+            if originalContent.isEmpty {
+                originalContent = oldValue
             }
+            if newValue != originalContent {
+                note.updatedAt = Date()
+                note.title = note.extractedTitle
+            }
+        }
             .onAppear {
                 // Store original content when note loads
                 originalContent = note.content
@@ -205,28 +206,6 @@ struct NoteEditorView: View {
     }
     
     // Dracula dark theme colors
-    private var draculaTheme: Theme {
-        Theme(colourScheme: .dark,
-              fontName: "SFMono-Medium",
-              fontSize: 13.0,
-              textColour: NSColor(red: 0.98, green: 0.98, blue: 0.98, alpha: 1.0),        // #f8f8f2
-              commentColour: NSColor(red: 0.51, green: 0.54, blue: 0.59, alpha: 1.0),     // #6272a4 (blockquotes)
-              stringColour: NSColor(red: 0.57, green: 0.93, blue: 0.96, alpha: 1.0),      // #8be9fd (inline code)
-              characterColour: NSColor(red: 0.97, green: 0.59, blue: 0.75, alpha: 1.0),   // #f55bcf (bold)
-              numberColour: NSColor(red: 0.97, green: 0.59, blue: 0.75, alpha: 1.0),      // #f55bcf (list numbers)
-              identifierColour: NSColor(red: 0.57, green: 0.93, blue: 0.96, alpha: 1.0),  // #8be9fd (headings/links)
-              operatorColour: NSColor(red: 0.97, green: 0.59, blue: 0.75, alpha: 1.0),    // #f55bcf (italic/strikethrough/operators)
-              keywordColour: NSColor(red: 0.97, green: 0.59, blue: 0.75, alpha: 1.0),     // #f55bcf (keywords)
-              symbolColour: NSColor(red: 0.98, green: 0.98, blue: 0.98, alpha: 1.0),      // #f8f8f2 (regular text)
-              typeColour: NSColor(red: 0.57, green: 0.93, blue: 0.96, alpha: 1.0),        // #8be9fd (types)
-              fieldColour: NSColor(red: 0.97, green: 0.59, blue: 0.75, alpha: 1.0),       // #f55bcf (fields)
-              caseColour: NSColor(red: 0.97, green: 0.59, blue: 0.75, alpha: 1.0),        // #f55bcf (alternates)
-              backgroundColour: NSColor(red: 0.07, green: 0.08, blue: 0.11, alpha: 1.0),  // #13141c
-              currentLineColour: NSColor(red: 0.14, green: 0.15, blue: 0.20, alpha: 1.0), // #24262e
-              selectionColour: NSColor(red: 0.25, green: 0.27, blue: 0.37, alpha: 1.0),   // #40425f
-              cursorColour: NSColor(red: 0.98, green: 0.98, blue: 0.98, alpha: 1.0),      // #f8f8f2
-              invisiblesColour: NSColor(red: 0.35, green: 0.38, blue: 0.47, alpha: 1.0))  // #5a5f77
-    }
     
     // MARK: - Formatting Helpers
     
@@ -587,6 +566,77 @@ struct EmptyEditorView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(red: 0.0745, green: 0.0784, blue: 0.1098))
+    }
+}
+
+// MARK: - STTextView Wrapper
+struct STTextViewRepresentable: NSViewRepresentable {
+    @Binding var text: String
+    var isEditable: Bool = true
+    var font: NSFont?
+    var textColor: NSColor = .white
+    var backgroundColor: NSColor = NSColor(red: 0.0745, green: 0.0784, blue: 0.1098, alpha: 1.0)
+    
+    func makeNSView(context: Context) -> NSView {
+        // Dynamically load STTextView from the STTextView framework
+        let bundle = Bundle(for: NSTextView.self)
+        if let frameworkBundle = Bundle(path: "/Users/oddurs/Library/Developer/Xcode/DerivedData/Drift-fwybbspgegfuuqbwfzlazrjtduop/Build/Products/Release/STTextView.framework") {
+            if let stTextViewClass = frameworkBundle.classNamed("STTextView.STTextView") as? NSView.Type {
+                let textView = stTextViewClass.init()
+                textView.setValue(text, forKey: "string")
+                
+                if let font = font {
+                    textView.setValue(font, forKey: "font")
+                } else {
+                    let menloFont = NSFont(name: "Menlo", size: 14) ?? NSFont.systemFont(ofSize: 14)
+                    textView.setValue(menloFont, forKey: "font")
+                }
+                
+                textView.setValue(textColor, forKey: "textColor")
+                textView.setValue(backgroundColor, forKey: "backgroundColor")
+                
+                return textView
+            }
+        }
+        
+        // Fallback to standard NSTextView if STTextView is not available
+        let textView = NSTextView()
+        textView.string = text
+        if let font = font {
+            textView.font = font
+        } else {
+            textView.font = NSFont(name: "Menlo", size: 14)
+        }
+        textView.textColor = textColor
+        textView.backgroundColor = backgroundColor
+        textView.delegate = context.coordinator
+        
+        return textView
+    }
+    
+    func updateNSView(_ nsView: NSView, context: Context) {
+        if let stTextView = nsView as? NSTextView {
+            if stTextView.string != text {
+                stTextView.string = text
+            }
+        }
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(text: $text)
+    }
+    
+    class Coordinator: NSObject, NSTextViewDelegate {
+        @Binding var text: String
+        
+        init(text: Binding<String>) {
+            self._text = text
+        }
+        
+        func textDidChange(_ notification: Notification) {
+            guard let textView = notification.object as? NSTextView else { return }
+            self.text = textView.string
+        }
     }
 }
 
