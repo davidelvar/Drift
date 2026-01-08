@@ -25,7 +25,7 @@ struct MarkdownView: View {
             .padding(24)
             .textSelection(.enabled)
         }
-        .background(Color(red: 0.1137, green: 0.1176, blue: 0.1569))
+        .background(Color(red: 0.0745, green: 0.0784, blue: 0.1098))
     }
     
     private func processMarkdownLines(_ lines: [String]) -> [AnyView] {
