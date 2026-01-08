@@ -535,7 +535,7 @@ struct EmptyEditorView: View {
                 .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(nsColor: .textBackgroundColor))
+        .background(Color(red: 0.1137, green: 0.1176, blue: 0.1569))
     }
 }
 

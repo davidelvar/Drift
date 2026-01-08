@@ -16,7 +16,7 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             // Dracula background for the main app
-            Color(red: 0.1256, green: 0.132, blue: 0.1696)
+            Color(red: 0.1137, green: 0.1176, blue: 0.1569)
                 .ignoresSafeArea()
             
             NavigationSplitView(columnVisibility: $columnVisibility) {
