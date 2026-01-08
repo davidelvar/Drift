@@ -204,7 +204,9 @@ struct FolderRow: View {
                 .onExitCommand(onRenameCancel)
         } else {
             SidebarRow(item: .folder(folder), count: count)
-                .onDoubleClick(perform: onDoubleClick)
+                .onDoubleClick {
+                    onDoubleClick()
+                }
                 .contextMenu {
                     Button("Rename", systemImage: "pencil") {
                         onContextMenuRename()
