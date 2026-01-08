@@ -743,16 +743,16 @@ struct STTextViewRepresentable: NSViewRepresentable {
             guard let textView = notification.object as? NSTextView else { return }
             self.text = textView.string
             
-            // Update line highlighting
+            // Apply markdown syntax highlighting first
+            if let storage = textView.textStorage {
+                MarkdownHighlighter.highlight(textView.string, in: storage)
+            }
+            
+            // Update line highlighting after markdown (so it layers on top)
             if highlightSelectedLine {
                 updateLineHighlight(textView)
             } else {
                 clearLineHighlight(textView)
-            }
-            
-            // Apply markdown syntax highlighting
-            if let storage = textView.textStorage {
-                MarkdownHighlighter.highlight(textView.string, in: storage)
             }
         }
         
