@@ -12,19 +12,21 @@ import AppKit
 class LineNumberRulerView: NSRulerView {
     private weak var textView: NSTextView?
     private let charWidth: CGFloat = 8
+    private let backgroundColor = NSColor(red: 0.09, green: 0.09, blue: 0.12, alpha: 1.0) // #161618
     
     init(scrollView: NSScrollView, textView: NSTextView) {
         self.textView = textView
         super.init(scrollView: scrollView, orientation: .verticalRuler)
         self.ruleThickness = 50
-        self.backgroundColor = NSColor(red: 0.09, green: 0.09, blue: 0.12, alpha: 1.0) // #161618
     }
     
-    required init?(coder: NSCoder) {
+    required init(coder: NSCoder) {
         super.init(coder: coder)
     }
     
     override func draw(_ dirtyRect: NSRect) {
+        backgroundColor.setFill()
+        dirtyRect.fill()
         super.draw(dirtyRect)
         
         guard let textView = textView, let layoutManager = textView.layoutManager else { return }
