@@ -263,21 +263,21 @@ struct MarkdownView: View {
         let keywords = ["let", "var", "func", "class", "struct", "enum", "protocol", "extension", "if", "else", "for", "while", "return", "import", "mutating", "async", "await"]
         let types = ["String", "Int", "Double", "Bool", "Array", "Dictionary", "Set", "Optional", "View", "State", "Binding", "AppStorage"]
         
-        return highlightCode(code, keywords: keywords, types: types, stringColor: Color(nsColor: .systemRed), keywordColor: Color(nsColor: .systemOrange), typeColor: Color(nsColor: .systemBlue), commentColor: Color.gray)
+        return highlightCode(code: code, keywords: keywords, types: types, stringColor: Color(nsColor: .systemRed), keywordColor: Color(nsColor: .systemOrange), typeColor: Color(nsColor: .systemBlue), commentColor: Color.gray)
     }
     
     private func highlightPython(_ code: String) -> Text {
         let keywords = ["def", "class", "if", "else", "elif", "for", "while", "return", "import", "from", "as", "True", "False", "None", "and", "or", "not", "in", "is"]
         let types = ["str", "int", "float", "bool", "list", "dict", "set", "tuple"]
         
-        return highlightCode(code, keywords: keywords, types: types, stringColor: Color(nsColor: .systemGreen), keywordColor: Color(nsColor: .systemOrange), typeColor: Color(nsColor: .systemBlue), commentColor: Color.gray)
+        return highlightCode(code: code, keywords: keywords, types: types, stringColor: Color(nsColor: .systemGreen), keywordColor: Color(nsColor: .systemOrange), typeColor: Color(nsColor: .systemBlue), commentColor: Color.gray)
     }
     
     private func highlightJavaScript(_ code: String) -> Text {
         let keywords = ["function", "const", "let", "var", "if", "else", "for", "while", "return", "import", "export", "async", "await", "class", "extends", "new", "this", "super"]
         let types = ["String", "Number", "Boolean", "Array", "Object", "Promise"]
         
-        return highlightCode(code, keywords: keywords, types: types, stringColor: Color(nsColor: .systemGreen), keywordColor: Color(nsColor: .systemRed), typeColor: Color(nsColor: .systemBlue), commentColor: Color.gray)
+        return highlightCode(code: code, keywords: keywords, types: types, stringColor: Color(nsColor: .systemGreen), keywordColor: Color(nsColor: .systemRed), typeColor: Color(nsColor: .systemBlue), commentColor: Color.gray)
     }
     
     private func highlightJSON(_ code: String) -> Text {
