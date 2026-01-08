@@ -48,7 +48,7 @@ final class Note {
         let stripped = previewText.replacingOccurrences(of: #"[#*_`~\[\]()]"#, with: "", options: .regularExpression)
         let cleaned = stripped.trimmingCharacters(in: .whitespaces)
         
-        return String(cleaned.prefix(60))
+        return String(cleaned.prefix(120))
     }
     
     var wordCount: Int {
