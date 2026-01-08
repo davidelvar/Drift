@@ -60,6 +60,7 @@ extension Theme {
     static let driftDark = Theme()
         // MARK: - Text Styles
         .text {
+            FontFamilyVariant(.system)
             ForegroundColor(.driftText)
             BackgroundColor(.driftBackground)
             FontSize(16)
@@ -85,6 +86,7 @@ extension Theme {
                     .relativeLineSpacing(.em(0.125))
                     .markdownMargin(top: 24, bottom: 16)
                     .markdownTextStyle {
+                        FontFamilyVariant(.system)
                         FontWeight(.semibold)
                         FontSize(.em(2))
                     }
@@ -98,6 +100,7 @@ extension Theme {
                     .relativeLineSpacing(.em(0.125))
                     .markdownMargin(top: 24, bottom: 16)
                     .markdownTextStyle {
+                        FontFamilyVariant(.system)
                         FontWeight(.semibold)
                         FontSize(.em(1.5))
                     }
@@ -109,6 +112,7 @@ extension Theme {
                 .relativeLineSpacing(.em(0.125))
                 .markdownMargin(top: 24, bottom: 16)
                 .markdownTextStyle {
+                    FontFamilyVariant(.system)
                     FontWeight(.semibold)
                     FontSize(.em(1.25))
                 }
@@ -118,6 +122,7 @@ extension Theme {
                 .relativeLineSpacing(.em(0.125))
                 .markdownMargin(top: 24, bottom: 16)
                 .markdownTextStyle {
+                    FontFamilyVariant(.system)
                     FontWeight(.semibold)
                 }
         }
@@ -126,6 +131,7 @@ extension Theme {
                 .relativeLineSpacing(.em(0.125))
                 .markdownMargin(top: 24, bottom: 16)
                 .markdownTextStyle {
+                    FontFamilyVariant(.system)
                     FontWeight(.semibold)
                     FontSize(.em(0.875))
                 }
@@ -135,6 +141,7 @@ extension Theme {
                 .relativeLineSpacing(.em(0.125))
                 .markdownMargin(top: 24, bottom: 16)
                 .markdownTextStyle {
+                    FontFamilyVariant(.system)
                     FontWeight(.semibold)
                     FontSize(.em(0.85))
                     ForegroundColor(.driftTertiaryText)
@@ -147,6 +154,9 @@ extension Theme {
                 .fixedSize(horizontal: false, vertical: true)
                 .relativeLineSpacing(.em(0.25))
                 .markdownMargin(top: 0, bottom: 16)
+                .markdownTextStyle {
+                    FontFamilyVariant(.system)
+                }
         }
         
         // MARK: - Block Quotes (GFM Section 5.1)
@@ -156,7 +166,10 @@ extension Theme {
                     .fill(Color.driftBorder)
                     .relativeFrame(width: .em(0.2))
                 configuration.label
-                    .markdownTextStyle { ForegroundColor(.driftSecondaryText) }
+                    .markdownTextStyle {
+                        FontFamilyVariant(.system)
+                        ForegroundColor(.driftSecondaryText)
+                    }
                     .relativePadding(.horizontal, length: .em(1))
             }
             .fixedSize(horizontal: false, vertical: true)
