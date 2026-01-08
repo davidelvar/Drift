@@ -144,7 +144,7 @@ struct SettingsView: View {
     @AppStorage("editorSmartQuotes") private var smartQuotes = false
     @AppStorage("editorSmartDashes") private var smartDashes = false
     
-    let editorFonts = ["Menlo", "Monaco", "Courier New"]
+    let editorFonts = ["Monaco", "Menlo", "SF Mono", "Courier New", "Andale Mono"]
     
     var body: some View {
         TabView {

@@ -27,7 +27,7 @@ struct NoteEditorView: View {
     @Bindable var note: Note
     @Bindable var appState: AppState
     
-    @AppStorage("editorFont") private var editorFont = "Menlo"
+    @AppStorage("editorFont") private var editorFont = "Monaco"
     @AppStorage("editorFontSize") private var editorFontSize = 15.0
     @AppStorage("editorShowLineNumbers") private var showLineNumbers = true
     @AppStorage("editorHighlightSelectedLine") private var highlightSelectedLine = true
@@ -37,6 +37,20 @@ struct NoteEditorView: View {
     @AppStorage("editorSpellCheck") private var spellCheck = true
     @AppStorage("editorSmartQuotes") private var smartQuotes = false
     @AppStorage("editorSmartDashes") private var smartDashes = false
+    
+    // Helper to get font with fallback
+    private func getFont(name: String, size: Double) -> NSFont {
+        let fontFallbacks = [name, "Monaco", "Menlo", "SF Mono", "Courier New", "Andale Mono"]
+        
+        for fontName in fontFallbacks {
+            if let font = NSFont(name: fontName, size: size) {
+                return font
+            }
+        }
+        
+        // Final fallback to system monospace
+        return NSFont.monospacedSystemFont(ofSize: size, weight: .regular)
+    }
     
     @State private var showingInspector = false
     @State private var selectedRange: NSRange?
@@ -192,7 +206,7 @@ struct NoteEditorView: View {
     private var editorView: some View {
         STTextViewRepresentable(
             text: $note.content,
-            font: NSFont(name: editorFont, size: editorFontSize),
+            font: getFont(name: editorFont, size: editorFontSize),
             textColor: NSColor(red: 0.973, green: 0.973, blue: 0.949, alpha: 1.0),
             backgroundColor: NSColor(red: 0.0745, green: 0.0784, blue: 0.1098, alpha: 1.0),
             showLineNumbers: showLineNumbers,
@@ -610,7 +624,18 @@ struct STTextViewRepresentable: NSViewRepresentable {
         if let font = font {
             textView.font = font
         } else {
-            textView.font = NSFont(name: "Menlo", size: 14)
+            // Fallback fonts if none provided
+            let fallbacks = ["Monaco", "Menlo", "SF Mono", "Courier New", "Andale Mono"]
+            for fontName in fallbacks {
+                if let fallbackFont = NSFont(name: fontName, size: 14) {
+                    textView.font = fallbackFont
+                    break
+                }
+            }
+            // Final fallback to system monospace
+            if textView.font == nil {
+                textView.font = NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
+            }
         }
         textView.textColor = textColor
         textView.backgroundColor = backgroundColor

@@ -14,6 +14,7 @@ class MarkdownHighlighter {
         heading: NSColor(red: 0.55, green: 0.93, blue: 0.96, alpha: 1.0),      // #8be9fd (cyan)
         bold: NSColor(red: 0.97, green: 0.59, blue: 0.75, alpha: 1.0),         // #f55bcf (magenta)
         italic: NSColor(red: 0.97, green: 0.59, blue: 0.75, alpha: 1.0),       // #f55bcf (magenta)
+        strikethrough: NSColor(red: 0.51, green: 0.54, blue: 0.59, alpha: 1.0), // #6272a4 (gray)
         code: NSColor(red: 0.55, green: 0.93, blue: 0.96, alpha: 1.0),         // #8be9fd (cyan)
         link: NSColor(red: 0.55, green: 0.93, blue: 0.96, alpha: 1.0),         // #8be9fd (cyan)
         blockquote: NSColor(red: 0.51, green: 0.54, blue: 0.59, alpha: 1.0),   // #6272a4 (gray)
@@ -27,33 +28,42 @@ class MarkdownHighlighter {
         // Reset all attributes first
         storage.setAttributes([.foregroundColor: colors.text], range: range)
         
-        // Headers: # ## ### etc.
-        applyHighlighting(pattern: "^#+\\s.*$", text: text, storage: storage, color: colors.heading, isRegex: true)
+        // Headers: ^(#{1,6})\s+(.+)$
+        applyHighlighting(pattern: "^#{1,6}\\s+.+$", text: text, storage: storage, color: colors.heading)
         
-        // Bold: **text** or __text__
-        applyHighlighting(pattern: "\\*\\*[^*]+\\*\\*|__[^_]+__", text: text, storage: storage, color: colors.bold, isRegex: true)
+        // Bold: \*\*(.+?)\*\*|__(.+?)__
+        applyHighlighting(pattern: "\\*\\*.+?\\*\\*|__.+?__", text: text, storage: storage, color: colors.bold)
         
-        // Italic: *text* or _text_ (but not inside bold)
-        applyHighlighting(pattern: "(?<!\\*|_)[*_][^*_]+[*_](?!\\*|_)", text: text, storage: storage, color: colors.italic, isRegex: true)
+        // Italic: \*(.+?)\*|_(.+?)_
+        applyHighlighting(pattern: "\\*.+?\\*|_.+?_", text: text, storage: storage, color: colors.italic)
         
-        // Inline code: `text`
-        applyHighlighting(pattern: "`[^`]+`", text: text, storage: storage, color: colors.code, isRegex: true)
+        // Strikethrough: ~~(.+?)~~
+        applyHighlighting(pattern: "~~.+?~~", text: text, storage: storage, color: colors.strikethrough)
         
-        // Code blocks: ```text```
-        applyHighlighting(pattern: "```[\\s\\S]*?```", text: text, storage: storage, color: colors.code, isRegex: true)
+        // Inline code: `(.+?)`
+        applyHighlighting(pattern: "`.+?`", text: text, storage: storage, color: colors.code)
         
-        // Links: [text](url)
-        applyHighlighting(pattern: "\\[[^\\]]+\\]\\([^)]+\\)", text: text, storage: storage, color: colors.link, isRegex: true)
+        // Code block: ^```(?:\s*(\w+))?([\s\S]*?)^```$
+        applyHighlighting(pattern: "^```[^`]*```$", text: text, storage: storage, color: colors.code)
         
-        // Blockquotes: > text
-        applyHighlighting(pattern: "^>\\s.*$", text: text, storage: storage, color: colors.blockquote, isRegex: true)
+        // Links: \[(.*?)\]\((.*?)\s?(?:\"(.*?)\")?\)
+        applyHighlighting(pattern: "\\[.+?\\]\\(.+?\\)", text: text, storage: storage, color: colors.link)
         
-        // Lists: - item, * item, 1. item
-        applyHighlighting(pattern: "^[\\s]*[-*+]\\s|^[\\s]*\\d+\\.\\s", text: text, storage: storage, color: colors.list, isRegex: true)
+        // Images: !\[(.*?)\]\((.*?)\s?(?:\"(.*?)\")?\)
+        applyHighlighting(pattern: "!\\[.+?\\]\\(.+?\\)", text: text, storage: storage, color: colors.link)
+        
+        // Blockquote: ^>\s*(.+)$
+        applyHighlighting(pattern: "^>\\s*.+$", text: text, storage: storage, color: colors.blockquote)
+        
+        // Unordered list: ^\s*[-+*]\s+(.+)$
+        applyHighlighting(pattern: "^\\s*[-+*]\\s+.+$", text: text, storage: storage, color: colors.list)
+        
+        // Ordered list: ^\s*\d+\.\s+(.+)$
+        applyHighlighting(pattern: "^\\s*\\d+\\.\\s+.+$", text: text, storage: storage, color: colors.list)
     }
     
-    private static func applyHighlighting(pattern: String, text: String, storage: NSTextStorage, color: NSColor, isRegex: Bool) {
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: isRegex ? [.useUnicodeWordBoundaries, .anchorsMatchLines] : []) else {
+    private static func applyHighlighting(pattern: String, text: String, storage: NSTextStorage, color: NSColor) {
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.useUnicodeWordBoundaries, .anchorsMatchLines]) else {
             return
         }
         
