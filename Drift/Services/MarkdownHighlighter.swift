@@ -28,42 +28,55 @@ class MarkdownHighlighter {
         // Reset all attributes first
         storage.setAttributes([.foregroundColor: colors.text], range: range)
         
-        // Headers: ^(#{1,6})\s+(.+)$
-        applyHighlighting(pattern: "^#{1,6}\\s+.+$", text: text, storage: storage, color: colors.heading)
+        // Apply highlighting in priority order to handle nesting properly
+        // 1. Code blocks first (highest priority - nothing inside should be highlighted)
+        highlightCodeBlocks(text: text, storage: storage)
         
-        // Bold: \*\*(.+?)\*\*|__(.+?)__
-        applyHighlighting(pattern: "\\*\\*.+?\\*\\*|__.+?__", text: text, storage: storage, color: colors.bold)
+        // 2. Inline code (prevent highlighting inside code spans)
+        applyHighlighting(pattern: "`[^`]+`", text: text, storage: storage, color: colors.code)
         
-        // Italic: \*(.+?)\*|_(.+?)_
-        applyHighlighting(pattern: "\\*.+?\\*|_.+?_", text: text, storage: storage, color: colors.italic)
+        // 3. Links and images
+        applyHighlighting(pattern: "!?\\[[^\\]]*\\]\\([^)]*\\)", text: text, storage: storage, color: colors.link)
         
-        // Strikethrough: ~~(.+?)~~
-        applyHighlighting(pattern: "~~.+?~~", text: text, storage: storage, color: colors.strikethrough)
+        // 4. Bold (must come before italic to prevent conflicts)
+        applyHighlighting(pattern: "\\*\\*[^*]+\\*\\*|__[^_]+__", text: text, storage: storage, color: colors.bold)
         
-        // Inline code: `(.+?)`
-        applyHighlighting(pattern: "`.+?`", text: text, storage: storage, color: colors.code)
+        // 5. Strikethrough
+        applyHighlighting(pattern: "~~[^~]+~~", text: text, storage: storage, color: colors.strikethrough)
         
-        // Code block: ^```(?:\s*(\w+))?([\s\S]*?)^```$
-        applyHighlighting(pattern: "^```[^`]*```$", text: text, storage: storage, color: colors.code)
+        // 6. Italic (single delimiters, but be careful with asterisks)
+        applyHighlighting(pattern: "_[^_]+_", text: text, storage: storage, color: colors.italic)
+        // For *text*, require word boundaries to avoid false positives
+        applyHighlighting(pattern: "\\*[^*\\s][^*]*[^*\\s]\\*", text: text, storage: storage, color: colors.italic)
         
-        // Links: \[(.*?)\]\((.*?)\s?(?:\"(.*?)\")?\)
-        applyHighlighting(pattern: "\\[.+?\\]\\(.+?\\)", text: text, storage: storage, color: colors.link)
+        // 7. Blockquotes
+        applyHighlighting(pattern: "^>.*$", text: text, storage: storage, color: colors.blockquote)
         
-        // Images: !\[(.*?)\]\((.*?)\s?(?:\"(.*?)\")?\)
-        applyHighlighting(pattern: "!\\[.+?\\]\\(.+?\\)", text: text, storage: storage, color: colors.link)
+        // 8. Headers
+        applyHighlighting(pattern: "^#{1,6}\\s+.*$", text: text, storage: storage, color: colors.heading)
         
-        // Blockquote: ^>\s*(.+)$
-        applyHighlighting(pattern: "^>\\s*.+$", text: text, storage: storage, color: colors.blockquote)
+        // 9. Lists
+        applyHighlighting(pattern: "^\\s*[-*+]\\s+.*$", text: text, storage: storage, color: colors.list)
+        applyHighlighting(pattern: "^\\s*\\d+\\.\\s+.*$", text: text, storage: storage, color: colors.list)
+    }
+    
+    private static func highlightCodeBlocks(text: String, storage: NSTextStorage) {
+        // Match code blocks: triple backticks with optional language identifier
+        let pattern = "```[^`]*?```"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]) else {
+            return
+        }
         
-        // Unordered list: ^\s*[-+*]\s+(.+)$
-        applyHighlighting(pattern: "^\\s*[-+*]\\s+.+$", text: text, storage: storage, color: colors.list)
+        let matches = regex.matches(in: text, options: [], range: NSRange(text.startIndex..., in: text))
         
-        // Ordered list: ^\s*\d+\.\s+(.+)$
-        applyHighlighting(pattern: "^\\s*\\d+\\.\\s+.+$", text: text, storage: storage, color: colors.list)
+        for match in matches {
+            let attributes: [NSAttributedString.Key: Any] = [.foregroundColor: colors.code]
+            storage.addAttributes(attributes, range: match.range)
+        }
     }
     
     private static func applyHighlighting(pattern: String, text: String, storage: NSTextStorage, color: NSColor) {
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.useUnicodeWordBoundaries, .anchorsMatchLines]) else {
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.anchorsMatchLines]) else {
             return
         }
         
