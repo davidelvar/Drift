@@ -18,12 +18,12 @@ extension LanguageConfiguration {
         
         // MARK: - Regex Patterns for Markdown
         
-        // Headings: # ## ### etc - capture as identifiers for prominent coloring
-        // Matches: # Heading, ## Subheading, etc.
+        // Headings: # ## ### etc
+        // Matches: # Heading, ## Subheading
         let identifierRegex = Regex {
             ChoiceOf {
-                /^#{1,6}\s+[^\n]*$/  // Headings
-                /\[[^\]]*\]\([^\)]*\)/ // Links [text](url)
+                /#{1,6}\s+[^\n]*?(?=\n|$)/  // Headings
+                /\[[^\]]*\]\([^\)]*\)/       // Links [text](url)
             }
         }
         
@@ -34,7 +34,6 @@ extension LanguageConfiguration {
         }
         
         // Bold text: **text** or __text__
-        // Matches bold formatting
         let characterRegex = Regex {
             ChoiceOf {
                 /\*\*[^*]+\*\*/      // **bold**
@@ -42,13 +41,12 @@ extension LanguageConfiguration {
             }
         }
         
-        // Markdown operators: list markers, blockquotes, code fences, etc
-        // Matches: -, *, +, >, ```, etc
+        // Markdown operators: operators and special formatting
         let operatorRegex = Regex {
             ChoiceOf {
                 /```/                // Code fence
-                /^>\s+/              // Blockquote
-                /^[-*+]\s+/          // List markers at line start
+                />\s/                // Blockquote
+                /[-*+]\s/            // List markers
                 /\*[^*]+\*/          // *italic*
                 /_[^_]+_/            // _italic_
                 /~~[^~]+~~/          // ~~strikethrough~~
@@ -57,7 +55,7 @@ extension LanguageConfiguration {
         
         // Numbers: for numbered lists
         let numberRegex = Regex {
-            /^\d+\./
+            /\d+\./
         }
         
         return LanguageConfiguration(
@@ -65,12 +63,12 @@ extension LanguageConfiguration {
             supportsSquareBrackets: true,
             supportsCurlyBrackets: false,
             stringRegex: stringRegex,               // Inline code → cyan
-            characterRegex: characterRegex,         // Bold → yellow
-            numberRegex: numberRegex,               // List numbers → yellow
+            characterRegex: characterRegex,         // Bold → magenta
+            numberRegex: numberRegex,               // List numbers → magenta
             singleLineComment: nil,
             nestedComment: (open: "<!--", close: "-->"),
             identifierRegex: identifierRegex,       // Headings & links → cyan
-            operatorRegex: operatorRegex,           // Operators → yellow
+            operatorRegex: operatorRegex,           // Operators → magenta
             reservedIdentifiers: [],
             reservedOperators: [
                 "**", "__", "*", "_", "`", "~~", "#", "-", "+", ">"
