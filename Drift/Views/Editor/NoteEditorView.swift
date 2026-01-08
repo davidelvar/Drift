@@ -184,10 +184,9 @@ struct NoteEditorView: View {
     }
     
     private var editorView: some View {
-        CodeEditor(text: $note.content, position: $editorPosition, messages: .constant(Set()), language: .none)
+        CodeEditor(text: $note.content, position: $editorPosition, messages: .constant(Set()), language: .markdown())
             .environment(\.codeEditorTheme, draculaTheme)
             .focused($isContentFocused)
-            .withMarkdownHighlighting(text: note.content)
             .onChange(of: note.content) { oldValue, newValue in
                 // Only update if content actually changed from original
                 if originalContent.isEmpty {
@@ -210,17 +209,17 @@ struct NoteEditorView: View {
               fontName: "SFMono-Medium",
               fontSize: 13.0,
               textColour: NSColor(red: 0.98, green: 0.98, blue: 0.98, alpha: 1.0),        // #f8f8f2
-              commentColour: NSColor(red: 0.51, green: 0.54, blue: 0.59, alpha: 1.0),     // #6272a4
-              stringColour: NSColor(red: 0.97, green: 0.57, blue: 0.57, alpha: 1.0),      // #f55555
-              characterColour: NSColor(red: 0.94, green: 0.80, blue: 0.55, alpha: 1.0),   // #f1d656
-              numberColour: NSColor(red: 0.94, green: 0.80, blue: 0.55, alpha: 1.0),      // #f1d656
-              identifierColour: NSColor(red: 0.98, green: 0.98, blue: 0.98, alpha: 1.0),  // #f8f8f2
-              operatorColour: NSColor(red: 0.94, green: 0.80, blue: 0.55, alpha: 1.0),    // #f1d656
-              keywordColour: NSColor(red: 0.97, green: 0.59, blue: 0.75, alpha: 1.0),     // #f55bcf
-              symbolColour: NSColor(red: 0.98, green: 0.98, blue: 0.98, alpha: 1.0),      // #f8f8f2
-              typeColour: NSColor(red: 0.57, green: 0.93, blue: 0.96, alpha: 1.0),        // #8be9fd
-              fieldColour: NSColor(red: 0.50, green: 0.91, blue: 0.98, alpha: 1.0),       // #80f4ff
-              caseColour: NSColor(red: 0.94, green: 0.80, blue: 0.55, alpha: 1.0),        // #f1d656
+              commentColour: NSColor(red: 0.51, green: 0.54, blue: 0.59, alpha: 1.0),     // #6272a4 (blockquotes)
+              stringColour: NSColor(red: 0.57, green: 0.93, blue: 0.96, alpha: 1.0),      // #8be9fd (code blocks)
+              characterColour: NSColor(red: 0.94, green: 0.80, blue: 0.55, alpha: 1.0),   // #f1d656 (code fences)
+              numberColour: NSColor(red: 0.94, green: 0.80, blue: 0.55, alpha: 1.0),      // #f1d656 (list numbers)
+              identifierColour: NSColor(red: 0.57, green: 0.93, blue: 0.96, alpha: 1.0),  // #8be9fd (links)
+              operatorColour: NSColor(red: 0.94, green: 0.80, blue: 0.55, alpha: 1.0),    // #f1d656 (markdown operators)
+              keywordColour: NSColor(red: 0.97, green: 0.59, blue: 0.75, alpha: 1.0),     // #f55bcf (headings/bold)
+              symbolColour: NSColor(red: 0.98, green: 0.98, blue: 0.98, alpha: 1.0),      // #f8f8f2 (regular text)
+              typeColour: NSColor(red: 0.57, green: 0.93, blue: 0.96, alpha: 1.0),        // #8be9fd (inline code)
+              fieldColour: NSColor(red: 0.97, green: 0.59, blue: 0.75, alpha: 1.0),       // #f55bcf (emphasis/italic)
+              caseColour: NSColor(red: 0.94, green: 0.80, blue: 0.55, alpha: 1.0),        // #f1d656 (alternates)
               backgroundColour: NSColor(red: 0.07, green: 0.08, blue: 0.11, alpha: 1.0),  // #13141c
               currentLineColour: NSColor(red: 0.14, green: 0.15, blue: 0.20, alpha: 1.0), // #24262e
               selectionColour: NSColor(red: 0.25, green: 0.27, blue: 0.37, alpha: 1.0),   // #40425f
