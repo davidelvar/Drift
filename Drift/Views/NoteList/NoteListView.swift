@@ -87,6 +87,7 @@ struct NoteListView: View {
                         }
                 }
                 .listStyle(.inset)
+                .scrollContentBackground(.hidden)
                 .id(sortOrder)  // Force list refresh when sort order changes
             }
         }
