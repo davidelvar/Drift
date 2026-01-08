@@ -8,6 +8,60 @@
 import SwiftUI
 import AppKit
 
+// MARK: - Line Number Ruler View
+class LineNumberRulerView: NSRulerView {
+    private weak var textView: NSTextView?
+    private let charWidth: CGFloat = 8
+    
+    init(scrollView: NSScrollView, textView: NSTextView) {
+        self.textView = textView
+        super.init(scrollView: scrollView, orientation: .verticalRuler)
+        self.ruleThickness = 50
+        self.backgroundColor = NSColor(red: 0.09, green: 0.09, blue: 0.12, alpha: 1.0) // #161618
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func drawRect(_ dirtyRect: NSRect) {
+        super.drawRect(dirtyRect)
+        
+        guard let textView = textView, let layoutManager = textView.layoutManager else { return }
+        
+        let context = NSGraphicsContext.current?.cgContext
+        let textFont = textView.font ?? NSFont.monospacedSystemFont(ofSize: 15, weight: .regular)
+        let lineHeight = layoutManager.defaultLineHeight(for: textFont)
+        
+        let visibleRect = scrollView?.documentView?.visibleRect ?? .zero
+        let contentOffset = textView.bounds.origin.y
+        let firstVisibleLine = Int((visibleRect.origin.y - contentOffset) / lineHeight)
+        let lastVisibleLine = Int((visibleRect.origin.y + visibleRect.height - contentOffset) / lineHeight) + 1
+        
+        let lineCount = textView.string.components(separatedBy: .newlines).count
+        let numberFormatter = NumberFormatter()
+        numberFormatter.numberStyle = .none
+        
+        let textColor = NSColor(red: 0.576, green: 0.635, blue: 0.792, alpha: 1.0) // #92a2ca
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .right
+        
+        for lineNumber in max(0, firstVisibleLine)...min(lineCount, lastVisibleLine) {
+            let yPosition = CGFloat(lineNumber) * lineHeight + contentOffset
+            let lineRect = CGRect(x: 0, y: yPosition, width: ruleThickness - 4, height: lineHeight)
+            
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: textFont,
+                .foregroundColor: textColor,
+                .paragraphStyle: paragraphStyle
+            ]
+            
+            let lineString = NSAttributedString(string: "\(lineNumber + 1)", attributes: attributes)
+            lineString.draw(in: lineRect)
+        }
+    }
+}
+
 // MARK: - Dracula Theme Colors
 struct DraculaTheme {
     static let background = NSColor(red: 0.1137, green: 0.1176, blue: 0.1569, alpha: 1.0) // #1D1E28
@@ -40,15 +94,16 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
         textView.enabledTextCheckingTypes = 0
         textView.string = text
         textView.isVerticallyResizable = true
-        textView.isHorizontallyResizable = false  // Disable horizontal resizing to enable wrapping
+        textView.isHorizontallyResizable = true  // Allow horizontal resizing to prevent line wrapping
         textView.autoresizingMask = [.width, .height]
         textView.minSize = NSSize(width: 0, height: 0)
         textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
-        textView.textContainerInset = NSSize(width: 0, height: 16) // Vertical padding inside
+        textView.textContainerInset = NSSize(width: 8, height: 16) // Left padding for line numbers + vertical padding
         
-        // Configure text container for wrapping
+        // Configure text container to NOT wrap
         if let textContainer = textView.textContainer {
-            textContainer.widthTracksTextView = true
+            textContainer.widthTracksTextView = false
+            textContainer.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         }
         
         // Store textView in coordinator for later access
@@ -57,9 +112,14 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
         // Configure scroll view
         scrollView.documentView = textView
         scrollView.hasVerticalScroller = true
-        scrollView.hasHorizontalScroller = false  // Disable horizontal scrolling
+        scrollView.hasHorizontalScroller = true  // Enable horizontal scrolling since we're not wrapping
         scrollView.autohidesScrollers = true
         scrollView.backgroundColor = DraculaTheme.background
+        
+        // Add line number ruler
+        let lineNumberView = LineNumberRulerView(scrollView: scrollView, textView: textView)
+        scrollView.verticalRulerView = lineNumberView
+        scrollView.rulersVisible = true
         
         // Make scrollers more discreet
         if let verticalScroller = scrollView.verticalScroller {
