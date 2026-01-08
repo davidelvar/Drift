@@ -40,11 +40,16 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
         textView.enabledTextCheckingTypes = 0
         textView.string = text
         textView.isVerticallyResizable = true
-        textView.isHorizontallyResizable = true
+        textView.isHorizontallyResizable = false  // Disable horizontal resizing to enable wrapping
         textView.autoresizingMask = [.width, .height]
         textView.minSize = NSSize(width: 0, height: 0)
         textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         textView.textContainerInset = NSSize(width: 0, height: 16) // Vertical padding inside
+        
+        // Configure text container for wrapping
+        if let textContainer = textView.textContainer {
+            textContainer.widthTracksTextView = true
+        }
         
         // Store textView in coordinator for later access
         context.coordinator.textView = textView
@@ -52,16 +57,13 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
         // Configure scroll view
         scrollView.documentView = textView
         scrollView.hasVerticalScroller = true
-        scrollView.hasHorizontalScroller = true
+        scrollView.hasHorizontalScroller = false  // Disable horizontal scrolling
         scrollView.autohidesScrollers = true
         scrollView.backgroundColor = DraculaTheme.background
         
         // Make scrollers more discreet
         if let verticalScroller = scrollView.verticalScroller {
             verticalScroller.alphaValue = 0.5
-        }
-        if let horizontalScroller = scrollView.horizontalScroller {
-            horizontalScroller.alphaValue = 0.5
         }
         
         // Apply initial highlighting
