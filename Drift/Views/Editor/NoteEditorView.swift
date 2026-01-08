@@ -578,29 +578,9 @@ struct STTextViewRepresentable: NSViewRepresentable {
     var backgroundColor: NSColor = NSColor(red: 0.0745, green: 0.0784, blue: 0.1098, alpha: 1.0)
     
     func makeNSView(context: Context) -> NSView {
-        // Dynamically load STTextView from the STTextView framework
-        let bundle = Bundle(for: NSTextView.self)
-        if let frameworkBundle = Bundle(path: "/Users/oddurs/Library/Developer/Xcode/DerivedData/Drift-fwybbspgegfuuqbwfzlazrjtduop/Build/Products/Release/STTextView.framework") {
-            if let stTextViewClass = frameworkBundle.classNamed("STTextView.STTextView") as? NSView.Type {
-                let textView = stTextViewClass.init()
-                textView.setValue(text, forKey: "string")
-                
-                if let font = font {
-                    textView.setValue(font, forKey: "font")
-                } else {
-                    let menloFont = NSFont(name: "Menlo", size: 14) ?? NSFont.systemFont(ofSize: 14)
-                    textView.setValue(menloFont, forKey: "font")
-                }
-                
-                textView.setValue(textColor, forKey: "textColor")
-                textView.setValue(backgroundColor, forKey: "backgroundColor")
-                
-                return textView
-            }
-        }
-        
-        // Fallback to standard NSTextView if STTextView is not available
+        let scrollView = NSScrollView()
         let textView = NSTextView()
+        
         textView.string = text
         if let font = font {
             textView.font = font
@@ -610,15 +590,28 @@ struct STTextViewRepresentable: NSViewRepresentable {
         textView.textColor = textColor
         textView.backgroundColor = backgroundColor
         textView.delegate = context.coordinator
+        textView.isEditable = isEditable
+        textView.isSelectable = true
         
-        return textView
+        // Configure scroll view
+        scrollView.documentView = textView
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = true
+        scrollView.autohidesScrollers = true
+        scrollView.drawsBackground = true
+        scrollView.backgroundColor = backgroundColor
+        
+        return scrollView
     }
     
     func updateNSView(_ nsView: NSView, context: Context) {
-        if let stTextView = nsView as? NSTextView {
-            if stTextView.string != text {
-                stTextView.string = text
-            }
+        guard let scrollView = nsView as? NSScrollView,
+              let textView = scrollView.documentView as? NSTextView else {
+            return
+        }
+        
+        if textView.string != text {
+            textView.string = text
         }
     }
     
