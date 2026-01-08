@@ -34,19 +34,43 @@ struct NoteEditorView: View {
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isContentFocused: Bool
     
+    // Extract title from highest level heading
+    private var extractedTitle: String {
+        let lines = note.content.split(separator: "\n", omittingEmptySubsequences: false)
+        
+        // Find highest level heading (lowest # count)
+        var highestLevel = 7 // Start higher than h6
+        var foundTitle = ""
+        
+        for line in lines {
+            let trimmedLine = line.trimmingCharacters(in: .whitespaces)
+            
+            // Check if line starts with # (heading)
+            if trimmedLine.hasPrefix("#") {
+                let hashCount = trimmedLine.prefix(while: { $0 == "#" }).count
+                
+                if hashCount < highestLevel {
+                    highestLevel = hashCount
+                    // Extract text after the # symbols
+                    let titleText = trimmedLine
+                        .dropFirst(hashCount)
+                        .trimmingCharacters(in: .whitespaces)
+                    foundTitle = String(titleText)
+                }
+            }
+        }
+        
+        return foundTitle.isEmpty ? "Untitled" : foundTitle
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
-            // Title field
-            TextField("Title", text: $note.title)
+            // Title from heading
+            Text(extractedTitle)
                 .font(.system(size: 28, weight: .bold))
-                .textFieldStyle(.plain)
-                .focused($isTitleFocused)
                 .padding(.horizontal, 24)
                 .padding(.top, 20)
                 .padding(.bottom, 8)
-                .onChange(of: note.title) { _, _ in
-                    note.updatedAt = Date()
-                }
             
             // Metadata bar with mode picker on left
             HStack(spacing: 16) {
@@ -112,7 +136,7 @@ struct NoteEditorView: View {
             Divider()
             
             // Button group above editor (top right)
-            HStack {
+            HStack(spacing: 12) {
                 Spacer()
                 
                 Button(action: { appState.toggleFocusMode() }) {
@@ -138,6 +162,7 @@ struct NoteEditorView: View {
             }
             .padding(.horizontal, 24)
             .padding(.vertical, 8)
+            .font(.system(size: 14))
             
             // Content area based on mode
             Group {
@@ -178,8 +203,6 @@ struct NoteEditorView: View {
                 .pickerStyle(.segmented)
                 .labelsHidden()
                 .frame(width: 180)
-            }
-        }
             }
         }
         .inspector(isPresented: $showingInspector) {
