@@ -28,6 +28,15 @@ struct NoteEditorView: View {
     @Bindable var appState: AppState
     
     @AppStorage("editorFont") private var editorFont = "Menlo"
+    @AppStorage("editorFontSize") private var editorFontSize = 15.0
+    @AppStorage("editorShowLineNumbers") private var showLineNumbers = true
+    @AppStorage("editorHighlightSelectedLine") private var highlightSelectedLine = true
+    @AppStorage("editorWrapLines") private var wrapLines = true
+    @AppStorage("editorLineHeightMultiple") private var lineHeightMultiple = 1.5
+    @AppStorage("editorTabWidth") private var tabWidth = 4
+    @AppStorage("editorSpellCheck") private var spellCheck = true
+    @AppStorage("editorSmartQuotes") private var smartQuotes = false
+    @AppStorage("editorSmartDashes") private var smartDashes = false
     
     @State private var showingInspector = false
     @State private var selectedRange: NSRange?
@@ -183,9 +192,17 @@ struct NoteEditorView: View {
     private var editorView: some View {
         STTextViewRepresentable(
             text: $note.content,
-            font: NSFont(name: editorFont, size: 14),
+            font: NSFont(name: editorFont, size: editorFontSize),
             textColor: NSColor(red: 0.973, green: 0.973, blue: 0.949, alpha: 1.0),
-            backgroundColor: NSColor(red: 0.0745, green: 0.0784, blue: 0.1098, alpha: 1.0)
+            backgroundColor: NSColor(red: 0.0745, green: 0.0784, blue: 0.1098, alpha: 1.0),
+            showLineNumbers: showLineNumbers,
+            highlightSelectedLine: highlightSelectedLine,
+            wrapLines: wrapLines,
+            lineHeightMultiple: lineHeightMultiple,
+            tabWidth: tabWidth,
+            spellCheck: spellCheck,
+            smartQuotes: smartQuotes,
+            smartDashes: smartDashes
         )
         .frame(minWidth: 200, minHeight: 200)
         .focused($isContentFocused)
@@ -576,6 +593,14 @@ struct STTextViewRepresentable: NSViewRepresentable {
     var font: NSFont?
     var textColor: NSColor = .white
     var backgroundColor: NSColor = NSColor(red: 0.0745, green: 0.0784, blue: 0.1098, alpha: 1.0)
+    var showLineNumbers: Bool = true
+    var highlightSelectedLine: Bool = true
+    var wrapLines: Bool = true
+    var lineHeightMultiple: Double = 1.5
+    var tabWidth: Int = 4
+    var spellCheck: Bool = true
+    var smartQuotes: Bool = false
+    var smartDashes: Bool = false
     
     func makeNSView(context: Context) -> NSView {
         let scrollView = NSScrollView()
@@ -594,28 +619,28 @@ struct STTextViewRepresentable: NSViewRepresentable {
         textView.isSelectable = true
         
         // Markdown-specific settings
-        textView.isAutomaticSpellingCorrectionEnabled = true
-        textView.isAutomaticQuoteSubstitutionEnabled = false // Don't auto-convert quotes in markdown
-        textView.isAutomaticDashSubstitutionEnabled = false  // Don't convert -- to em-dash in markdown
+        textView.isAutomaticSpellingCorrectionEnabled = spellCheck
+        textView.isAutomaticQuoteSubstitutionEnabled = smartQuotes
+        textView.isAutomaticDashSubstitutionEnabled = smartDashes
         
         // Typography settings for better markdown readability
         let paragraphStyle = NSParagraphStyle.default.mutableCopy() as! NSMutableParagraphStyle
-        paragraphStyle.lineHeightMultiple = 1.5  // Better spacing for markdown
-        paragraphStyle.defaultTabInterval = 32   // 4-space indent
+        paragraphStyle.lineHeightMultiple = lineHeightMultiple
+        paragraphStyle.defaultTabInterval = CGFloat(tabWidth * 8)  // Convert to points
         textView.defaultParagraphStyle = paragraphStyle
         
         // Configure scroll view
         scrollView.documentView = textView
         scrollView.hasVerticalScroller = true
-        scrollView.hasHorizontalScroller = false  // Don't wrap for markdown readability
+        scrollView.hasHorizontalScroller = !wrapLines
         scrollView.autohidesScrollers = true
         scrollView.drawsBackground = true
         scrollView.backgroundColor = backgroundColor
         
         // Configure text view for markdown editing
-        textView.isHorizontallyResizable = false
+        textView.isHorizontallyResizable = !wrapLines
         textView.isVerticallyResizable = true
-        textView.textContainer?.widthTracksTextView = true
+        textView.textContainer?.widthTracksTextView = wrapLines
         
         return scrollView
     }
@@ -634,6 +659,20 @@ struct STTextViewRepresentable: NSViewRepresentable {
                 textView.setSelectedRange(NSRange(location: cursorPosition, length: 0))
             }
         }
+        
+        // Update dynamic settings
+        textView.isAutomaticSpellingCorrectionEnabled = spellCheck
+        textView.isAutomaticQuoteSubstitutionEnabled = smartQuotes
+        textView.isAutomaticDashSubstitutionEnabled = smartDashes
+        
+        let paragraphStyle = NSParagraphStyle.default.mutableCopy() as! NSMutableParagraphStyle
+        paragraphStyle.lineHeightMultiple = lineHeightMultiple
+        paragraphStyle.defaultTabInterval = CGFloat(tabWidth * 8)
+        textView.defaultParagraphStyle = paragraphStyle
+        
+        scrollView.hasHorizontalScroller = !wrapLines
+        textView.isHorizontallyResizable = !wrapLines
+        textView.textContainer?.widthTracksTextView = wrapLines
     }
     
     func makeCoordinator() -> Coordinator {

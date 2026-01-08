@@ -135,6 +135,14 @@ struct SettingsView: View {
     @AppStorage("editorFont") private var editorFont = "Menlo"
     @AppStorage("showWordCount") private var showWordCount = true
     @AppStorage("autoSave") private var autoSave = true
+    @AppStorage("editorShowLineNumbers") private var showLineNumbers = true
+    @AppStorage("editorHighlightSelectedLine") private var highlightSelectedLine = true
+    @AppStorage("editorWrapLines") private var wrapLines = true
+    @AppStorage("editorLineHeightMultiple") private var lineHeightMultiple = 1.5
+    @AppStorage("editorTabWidth") private var tabWidth = 4
+    @AppStorage("editorSpellCheck") private var spellCheck = true
+    @AppStorage("editorSmartQuotes") private var smartQuotes = false
+    @AppStorage("editorSmartDashes") private var smartDashes = false
     
     let editorFonts = ["Menlo", "Monaco", "Courier New"]
     
@@ -160,6 +168,40 @@ struct SettingsView: View {
             .formStyle(.grouped)
             .tabItem {
                 Label("General", systemImage: "gear")
+            }
+            
+            Form {
+                Section("Display") {
+                    Toggle("Show Line Numbers", isOn: $showLineNumbers)
+                    Toggle("Highlight Selected Line", isOn: $highlightSelectedLine)
+                    Toggle("Wrap Lines", isOn: $wrapLines)
+                }
+                
+                Section("Typography") {
+                    Slider(value: $lineHeightMultiple, in: 1.0...2.0, step: 0.1) {
+                        Text("Line Height: \(String(format: "%.1f", lineHeightMultiple))x")
+                    }
+                    
+                    Stepper("Tab Width: \(tabWidth)", value: $tabWidth, in: 2...8)
+                }
+                
+                Section("Smart Features") {
+                    Toggle("Spell Check", isOn: $spellCheck)
+                    Toggle("Smart Quotes", isOn: $smartQuotes)
+                        .help("Auto-convert double quotes to curly quotes")
+                    Toggle("Smart Dashes", isOn: $smartDashes)
+                        .help("Auto-convert -- to em-dash and - to en-dash")
+                }
+                
+                Section("Info") {
+                    Text("These settings optimize the editor for markdown writing.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .formStyle(.grouped)
+            .tabItem {
+                Label("Editor", systemImage: "pencil.and.scribble")
             }
             
             Form {
@@ -196,7 +238,7 @@ struct SettingsView: View {
                 Label("About", systemImage: "info.circle")
             }
         }
-        .frame(width: 450, height: 300)
+        .frame(width: 500, height: 400)
     }
     
     private func shortcutRow(_ action: String, shortcut: String) -> some View {
