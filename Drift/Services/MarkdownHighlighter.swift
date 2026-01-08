@@ -102,8 +102,9 @@ class MarkdownHighlighter {
     
     private static func highlightCodeBlocks(text: String, storage: NSTextStorage) {
         // Match code blocks: triple backticks with optional language identifier
-        let pattern = "```[^`]*?```"
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]) else {
+        // Pattern matches: ``` followed by optional language name, any content, then ```
+        let pattern = "```[a-zA-Z0-9]*\\n[\\s\\S]*?```"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
             return
         }
         
