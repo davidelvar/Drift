@@ -18,7 +18,7 @@ struct SidebarView: View {
     
     @State private var isAddingFolder = false
     @State private var newFolderName = ""
-    @State private var renamingFolderId: String? = nil
+    @State private var renamingFolderId: UUID? = nil
     @State private var renamingFolderName: String = ""
     
     // Computed counts
@@ -159,7 +159,7 @@ struct SidebarView: View {
             isRenaming: renamingFolderId == folder.id,
             renamingName: $renamingFolderName,
             onDoubleClick: {
-                renamingFolderId = folder.id.uuidString
+                renamingFolderId = folder.id
                 renamingFolderName = folder.name
             },
             onRename: {
@@ -173,7 +173,7 @@ struct SidebarView: View {
                 deleteFolder(folder)
             },
             onContextMenuRename: {
-                renamingFolderId = folder.id.uuidString
+                renamingFolderId = folder.id
                 renamingFolderName = folder.name
             }
         )
@@ -208,7 +208,9 @@ struct FolderRow: View {
                 .onExitCommand(onRenameCancel)
         } else {
             SidebarRow(item: .folder(folder), count: count)
-                .onDoubleClick(perform: onDoubleClick)
+                .onTapGesture(count: 2) {
+                    onDoubleClick()
+                }
                 .contextMenu {
                     Button("Rename", systemImage: "pencil") {
                         onContextMenuRename()
