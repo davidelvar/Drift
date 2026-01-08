@@ -578,6 +578,55 @@ extension Color {
     }
 }
 
+// MARK: - Line Number Gutter View
+class LineNumberView: NSView {
+    weak var textView: NSTextView?
+    var showLineNumbers: Bool = true
+    
+    let fontSize: CGFloat = 14
+    let gutterWidth: CGFloat = 50
+    
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        
+        guard showLineNumbers, let textView = textView, let layoutManager = textView.layoutManager else { return }
+        
+        let textColor = NSColor(red: 0.51, green: 0.54, blue: 0.59, alpha: 1.0) // Dracula gray for line numbers
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular),
+            .foregroundColor: textColor
+        ]
+        
+        let text = textView.string as NSString
+        var lineNumber = 1
+        var currentIndex = 0
+        
+        // Draw line numbers
+        while currentIndex < text.length {
+            // Find the range of current line
+            let lineRange = text.lineRange(for: NSRange(location: currentIndex, length: 0))
+            
+            // Get the glyph range for this line
+            let glyphRange = layoutManager.glyphRange(forCharacterRange: lineRange, actualCharacterRange: nil)
+            
+            // Get the bounding rect for the line
+            let lineRect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textView.textContainer!)
+            
+            // Draw the line number
+            let lineNumberString = "\(lineNumber)" as NSString
+            let lineNumberSize = lineNumberString.size(withAttributes: attributes)
+            let xOffset = gutterWidth - lineNumberSize.width - 8 // Right-align with padding
+            let yOffset = lineRect.origin.y
+            
+            lineNumberString.draw(at: NSPoint(x: xOffset, y: yOffset), withAttributes: attributes)
+            
+            // Move to next line
+            currentIndex = NSMaxRange(lineRange)
+            lineNumber += 1
+        }
+    }
+}
+
 // MARK: - Empty State
 struct EmptyEditorView: View {
     var body: some View {
@@ -658,8 +707,20 @@ struct STTextViewRepresentable: NSViewRepresentable {
         paragraphStyle.defaultTabInterval = CGFloat(tabWidth * 8)  // Convert to points
         textView.defaultParagraphStyle = paragraphStyle
         
-        // Configure scroll view
+        // Create line number gutter
+        let lineNumberView = LineNumberView()
+        lineNumberView.textView = textView
+        lineNumberView.showLineNumbers = showLineNumbers
+        lineNumberView.frame = NSRect(x: 0, y: 0, width: lineNumberView.gutterWidth, height: 0)
+        lineNumberView.backgroundColor = backgroundColor
+        
+        // Store reference for later updates
+        context.coordinator.lineNumberView = lineNumberView
+        
+        // Configure scroll view with gutter
         scrollView.documentView = textView
+        scrollView.verticalRulerView = lineNumberView
+        scrollView.hasVerticalRuler = showLineNumbers
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = !wrapLines
         scrollView.autohidesScrollers = true
@@ -717,6 +778,13 @@ struct STTextViewRepresentable: NSViewRepresentable {
         textView.isHorizontallyResizable = !wrapLines
         textView.textContainer?.widthTracksTextView = wrapLines
         
+        // Update line numbers visibility
+        scrollView.hasVerticalRuler = showLineNumbers
+        if let lineNumberView = context.coordinator.lineNumberView {
+            lineNumberView.showLineNumbers = showLineNumbers
+            lineNumberView.needsDisplay = true
+        }
+        
         // Update highlight selected line setting
         context.coordinator.highlightSelectedLine = highlightSelectedLine
         if highlightSelectedLine {
@@ -733,6 +801,7 @@ struct STTextViewRepresentable: NSViewRepresentable {
     class Coordinator: NSObject, NSTextViewDelegate {
         @Binding var text: String
         weak var textView: NSTextView?
+        weak var lineNumberView: LineNumberView?
         var highlightSelectedLine: Bool = true
         
         init(text: Binding<String>) {
@@ -754,6 +823,9 @@ struct STTextViewRepresentable: NSViewRepresentable {
             } else {
                 clearLineHighlight(textView)
             }
+            
+            // Redraw line numbers
+            lineNumberView?.needsDisplay = true
         }
         
         func textViewDidChangeSelection(_ notification: Notification) {
