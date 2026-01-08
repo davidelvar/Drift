@@ -35,8 +35,8 @@ class MarkdownHighlighter {
         // 2. Inline code (prevent highlighting inside code spans)
         applyHighlighting(pattern: "`[^`]+`", text: text, storage: storage, color: colors.code)
         
-        // 3. Links and images
-        applyHighlighting(pattern: "!?\\[[^\\]]*\\]\\([^)]*\\)", text: text, storage: storage, color: colors.link)
+        // 3. Links and images (only highlight the brackets and URL)
+        highlightLinks(text: text, storage: storage)
         
         // 4. List markers only (not the entire line content)
         highlightListMarkers(text: text, storage: storage)
@@ -57,6 +57,42 @@ class MarkdownHighlighter {
         
         // 9. Headers
         applyHighlighting(pattern: "^#{1,6}\\s+.*$", text: text, storage: storage, color: colors.heading)
+    }
+    
+    private static func highlightLinks(text: String, storage: NSTextStorage) {
+        // Match links: [text](url) and images: ![text](url)
+        // Only highlight the parentheses and URL, not the link text (to allow formatting inside)
+        let pattern = "(!?)\\[([^\\]]+)\\](\\([^)]*\\))"
+        
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
+            return
+        }
+        
+        let nsText = text as NSString
+        let textRange = NSRange(location: 0, length: nsText.length)
+        let matches = regex.matches(in: text, options: [], range: textRange)
+        
+        for match in matches {
+            // Highlight the ! if present (group 1)
+            if match.range(at: 1).length > 0 {
+                let attributes: [NSAttributedString.Key: Any] = [.foregroundColor: colors.link]
+                storage.addAttributes(attributes, range: match.range(at: 1))
+            }
+            
+            // Highlight the opening and closing brackets (group 2 range includes brackets)
+            // We need to highlight just the brackets
+            let linkTextRange = match.range(at: 2)
+            let openBracket = NSRange(location: linkTextRange.location - 1, length: 1)
+            let closeBracket = NSRange(location: linkTextRange.location + linkTextRange.length, length: 1)
+            
+            let attributes: [NSAttributedString.Key: Any] = [.foregroundColor: colors.link]
+            storage.addAttributes(attributes, range: openBracket)
+            storage.addAttributes(attributes, range: closeBracket)
+            
+            // Highlight the URL in parentheses (group 3)
+            let attributes3: [NSAttributedString.Key: Any] = [.foregroundColor: colors.link]
+            storage.addAttributes(attributes3, range: match.range(at: 3))
+        }
     }
     
     private static func highlightListMarkers(text: String, storage: NSTextStorage) {
