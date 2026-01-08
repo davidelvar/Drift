@@ -73,7 +73,7 @@ extension Theme {
         // Inline code
         .code {
             FontFamilyVariant(.monospaced)
-            FontSize(.points(14))
+            FontSize(.em(0.9))
             ForegroundColor(DraculaColors.cyan)
             BackgroundColor(DraculaColors.codeBackground)
         }
@@ -97,12 +97,11 @@ extension Theme {
         }
         // Emphasis (italic)
         .emphasis {
-            FontStyle(.italic)
+            FontWeight(.semibold)
             ForegroundColor(DraculaColors.orange)
         }
         // Strikethrough
         .strikethrough {
-            StrikethroughStyle()
             ForegroundColor(DraculaColors.red)
         }
         // Blockquotes
