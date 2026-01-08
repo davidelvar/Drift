@@ -9,56 +9,6 @@ import SwiftUI
 import SwiftData
 import AppKit
 
-// MARK: - Line Number Ruler View
-class LineNumberView: NSRulerView {
-    weak var textView: NSTextView?
-    private let lineNumberColor = NSColor(red: 0.576, green: 0.635, blue: 0.792, alpha: 1.0) // #92a2ca
-    private let backgroundColor = NSColor(red: 0.09, green: 0.09, blue: 0.12, alpha: 1.0) // #161618
-    
-    init(textView: NSTextView) {
-        self.textView = textView
-        super.init(scrollView: textView.enclosingScrollView!, orientation: .verticalRuler)
-        self.ruleThickness = 50
-    }
-    
-    required init(coder: NSCoder) {
-        super.init(coder: coder)
-    }
-    
-    override func draw(_ dirtyRect: NSRect) {
-        backgroundColor.setFill()
-        dirtyRect.fill()
-        
-        guard let textView = textView, let layoutManager = textView.layoutManager else {
-            return
-        }
-        
-        let textFont = textView.font ?? NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
-        let lineHeight = layoutManager.defaultLineHeight(for: textFont)
-        let visibleRect = textView.visibleRect
-        
-        let firstLine = Int(visibleRect.origin.y / lineHeight)
-        let lastLine = Int((visibleRect.origin.y + visibleRect.height) / lineHeight) + 1
-        
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.alignment = .right
-        
-        for lineNumber in max(1, firstLine)...lastLine {
-            let yPosition = CGFloat(lineNumber - 1) * lineHeight
-            let lineRect = CGRect(x: 0, y: yPosition, width: ruleThickness - 4, height: lineHeight)
-            
-            let attributes: [NSAttributedString.Key: Any] = [
-                .font: textFont,
-                .foregroundColor: lineNumberColor,
-                .paragraphStyle: paragraphStyle
-            ]
-            
-            let lineString = NSAttributedString(string: "\(lineNumber)", attributes: attributes)
-            lineString.draw(in: lineRect)
-        }
-    }
-}
-
 enum EditorMode: String, CaseIterable {
     case Edit
     case Preview
@@ -732,9 +682,7 @@ struct STTextViewRepresentable: NSViewRepresentable {
         scrollView.autohidesScrollers = true
         scrollView.backgroundColor = backgroundColor
         
-        // Add line number ruler
-        let lineNumberView = LineNumberView(textView: textView)
-        scrollView.verticalRulerView = lineNumberView
+        // Configure line numbers visibility (built-in NSTextView support)
         scrollView.rulersVisible = showLineNumbers
         
         // Apply initial syntax highlighting
@@ -816,10 +764,7 @@ struct STTextViewRepresentable: NSViewRepresentable {
         
         func textViewDidChangeSelection(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
-            // Trigger ruler redraw to highlight current line
-            if let rulerView = (textView.enclosingScrollView?.verticalRulerView as? LineNumberView) {
-                rulerView.needsDisplay = true
-            }
+            // Selection changed
         }
     }
 }
