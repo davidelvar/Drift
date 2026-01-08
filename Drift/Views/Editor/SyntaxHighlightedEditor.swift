@@ -23,12 +23,16 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
         textView.enabledTextCheckingTypes = 0
         textView.string = text
         
+        // Apply initial highlighting
+        context.coordinator.applyMarkdownHighlighting(to: textView)
+        
         return textView
     }
     
     func updateNSView(_ nsView: NSTextView, context: Context) {
         if nsView.string != text {
             nsView.string = text
+            context.coordinator.applyMarkdownHighlighting(to: nsView)
         }
         
         if let currentFont = nsView.font, currentFont.fontName != font || currentFont.pointSize != fontSize {
@@ -55,54 +59,61 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
             applyMarkdownHighlighting(to: textView)
         }
         
-        private func applyMarkdownHighlighting(to textView: NSTextView) {
-            let fullRange = NSRange(location: 0, length: textView.string.count)
-            let attributedString = NSMutableAttributedString(string: textView.string)
+        func applyMarkdownHighlighting(to textView: NSTextView) {
+            let string = textView.string
+            guard !string.isEmpty else { return }
             
-            // Reset all attributes
+            let attributedString = NSMutableAttributedString(string: string)
+            let fullRange = NSRange(location: 0, length: string.count)
+            
+            // Set default font and color for all text
+            let defaultFont = textView.font ?? NSFont.monospacedSystemFont(ofSize: 15, weight: .regular)
+            attributedString.addAttribute(.font, value: defaultFont, range: fullRange)
             attributedString.addAttribute(.foregroundColor, value: NSColor.labelColor, range: fullRange)
             
-            let text = textView.string as NSString
-            let lines = text.components(separatedBy: .newlines)
+            let nsString = string as NSString
+            let lines = nsString.components(separatedBy: .newlines)
             var currentLocation = 0
             
             for line in lines {
                 let lineRange = NSRange(location: currentLocation, length: line.count)
                 
-                // Headings
+                // Headings - blue
                 if line.hasPrefix("#") {
                     attributedString.addAttribute(.foregroundColor, value: NSColor.systemBlue, range: lineRange)
                 }
                 
-                // Bold **text**
-                findAndHighlight(in: attributedString, pattern: "\\*\\*(.+?)\\*\\*", color: NSColor.systemOrange, range: lineRange)
+                // Bold **text** - orange
+                findAndHighlightPattern(in: attributedString, pattern: "\\*\\*(.+?)\\*\\*", color: NSColor.systemOrange, range: lineRange)
                 
-                // Italic *text*
-                findAndHighlight(in: attributedString, pattern: "_(.+?)_", color: NSColor.systemGreen, range: lineRange)
+                // Italic *text* or _text_ - green
+                findAndHighlightPattern(in: attributedString, pattern: "_(.+?)_", color: NSColor.systemGreen, range: lineRange)
+                findAndHighlightPattern(in: attributedString, pattern: "(?<!\\*)\\*(?!\\*)(.+?)(?<!\\*)\\*(?!\\*)", color: NSColor.systemGreen, range: lineRange)
                 
-                // Inline code `code`
-                findAndHighlight(in: attributedString, pattern: "`(.+?)`", color: NSColor.systemRed, range: lineRange)
+                // Inline code `code` - red
+                findAndHighlightPattern(in: attributedString, pattern: "`(.+?)`", color: NSColor.systemRed, range: lineRange)
                 
-                // Links [text](url)
-                findAndHighlight(in: attributedString, pattern: "\\[(.+?)\\]\\((.+?)\\)", color: NSColor.systemBlue, range: lineRange)
+                // Links [text](url) - blue
+                findAndHighlightPattern(in: attributedString, pattern: "\\[(.+?)\\]\\((.+?)\\)", color: NSColor.systemBlue, range: lineRange)
                 
-                // Blockquotes
+                // Blockquotes - gray
                 if line.hasPrefix(">") {
                     attributedString.addAttribute(.foregroundColor, value: NSColor.systemGray, range: lineRange)
                 }
                 
-                // Code blocks
+                // Code blocks - purple
                 if line.hasPrefix("```") {
                     attributedString.addAttribute(.foregroundColor, value: NSColor.systemPurple, range: lineRange)
                 }
                 
-                // Lists
-                if line.trimmingCharacters(in: .whitespaces).hasPrefix("-") || 
-                   line.trimmingCharacters(in: .whitespaces).hasPrefix("*") ||
-                   line.trimmingCharacters(in: .whitespaces).hasPrefix("+") {
-                    let dashRange = NSRange(location: currentLocation + line.count - line.trimmingCharacters(in: .whitespaces).count,
-                                           length: 1)
-                    attributedString.addAttribute(.foregroundColor, value: NSColor.systemCyan, range: dashRange)
+                // Lists - cyan
+                let trimmed = line.trimmingCharacters(in: .whitespaces)
+                if trimmed.hasPrefix("-") || trimmed.hasPrefix("*") || trimmed.hasPrefix("+") {
+                    let startOffset = line.count - trimmed.count
+                    let dashRange = NSRange(location: currentLocation + startOffset, length: 1)
+                    if dashRange.location + dashRange.length <= attributedString.length {
+                        attributedString.addAttribute(.foregroundColor, value: NSColor.systemCyan, range: dashRange)
+                    }
                 }
                 
                 currentLocation += line.count + 1 // +1 for newline
@@ -111,10 +122,14 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
             // Apply the attributed string without losing undo/redo
             let savedSelectedRange = textView.selectedRange()
             textView.textStorage?.setAttributedString(attributedString)
-            textView.setSelectedRange(savedSelectedRange)
+            
+            // Restore selection if it's still valid
+            if savedSelectedRange.location <= textView.string.count {
+                textView.setSelectedRange(savedSelectedRange)
+            }
         }
         
-        private func findAndHighlight(in attributedString: NSMutableAttributedString, pattern: String, color: NSColor, range: NSRange) {
+        private func findAndHighlightPattern(in attributedString: NSMutableAttributedString, pattern: String, color: NSColor, range: NSRange) {
             guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return }
             
             let matches = regex.matches(in: attributedString.string, options: [], range: range)
