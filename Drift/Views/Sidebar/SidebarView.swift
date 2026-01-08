@@ -115,7 +115,7 @@ struct SidebarView: View {
         .toolbar {
             ToolbarItem {
                 Button(action: { isAddingFolder = true }) {
-                    Image(systemName: "folder.badge.plus")
+                    Image("folder-plus")
                 }
                 .help("New Folder")
             }

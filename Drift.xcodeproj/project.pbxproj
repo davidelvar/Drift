@@ -6,6 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		5D7784C72F0F7A7C008EF015 /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = 5DC585EC2F0F76AD0050AC0B /* Markdown */; };
+		5D7784C82F0F7A7C008EF015 /* Splash in Frameworks */ = {isa = PBXBuildFile; productRef = 5DC585ED2F0F76B00050AC0B /* Splash */; };
+		5D7784FC2F0FA64C008EF015 /* CodeEditorView in Frameworks */ = {isa = PBXBuildFile; productRef = 5D7784FB2F0FA64C008EF015 /* CodeEditorView */; };
+		5D7784FE2F0FA64C008EF015 /* LanguageSupport in Frameworks */ = {isa = PBXBuildFile; productRef = 5D7784FD2F0FA64C008EF015 /* LanguageSupport */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		6378F0F62F0F0D0800677FA7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,8 +59,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5DC585EE2F0F76AD0050AC0B /* Markdown in Frameworks */,
-				5DC585EF2F0F76B00050AC0B /* Splash in Frameworks */,
+				5D7784FE2F0FA64C008EF015 /* LanguageSupport in Frameworks */,
+				5D7784FC2F0FA64C008EF015 /* CodeEditorView in Frameworks */,
+				5D7784C82F0F7A7C008EF015 /* Splash in Frameworks */,
+				5D7784C72F0F7A7C008EF015 /* Markdown in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -116,6 +125,8 @@
 			packageProductDependencies = (
 				5DC585EC2F0F76AD0050AC0B /* Markdown */,
 				5DC585ED2F0F76B00050AC0B /* Splash */,
+				5D7784FB2F0FA64C008EF015 /* CodeEditorView */,
+				5D7784FD2F0FA64C008EF015 /* LanguageSupport */,
 			);
 			productName = Drift;
 			productReference = 6378F0E82F0F0D0700677FA7 /* Drift.app */;
@@ -202,6 +213,7 @@
 			packageReferences = (
 				5DC585EA2F0F55600050AC0B /* XCRemoteSwiftPackageReference "Splash" */,
 				5DC585EB2F0F769C0050AC0B /* XCRemoteSwiftPackageReference "swift-markdown" */,
+				5D7784FA2F0FA64C008EF015 /* XCRemoteSwiftPackageReference "CodeEditorView" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 6378F0E92F0F0D0700677FA7 /* Products */;
@@ -275,19 +287,6 @@
 			targetProxy = 6378F1002F0F0D0800677FA7 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		5DC585EC2F0F76AD0050AC0B /* Markdown */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 5DC585EB2F0F769C0050AC0B /* XCRemoteSwiftPackageReference "swift-markdown" */;
-			productName = Markdown;
-		};
-		5DC585ED2F0F76B00050AC0B /* Splash */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 5DC585EA2F0F55600050AC0B /* XCRemoteSwiftPackageReference "Splash" */;
-			productName = Splash;
-		};
-/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCBuildConfiguration section */
 		6378F1072F0F0D0800677FA7 /* Debug */ = {
@@ -596,6 +595,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		5D7784FA2F0FA64C008EF015 /* XCRemoteSwiftPackageReference "CodeEditorView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mchakravarty/CodeEditorView";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.15.4;
+			};
+		};
 		5DC585EA2F0F55600050AC0B /* XCRemoteSwiftPackageReference "Splash" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/JohnSundell/Splash.git";
@@ -613,6 +620,29 @@
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		5D7784FB2F0FA64C008EF015 /* CodeEditorView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D7784FA2F0FA64C008EF015 /* XCRemoteSwiftPackageReference "CodeEditorView" */;
+			productName = CodeEditorView;
+		};
+		5D7784FD2F0FA64C008EF015 /* LanguageSupport */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D7784FA2F0FA64C008EF015 /* XCRemoteSwiftPackageReference "CodeEditorView" */;
+			productName = LanguageSupport;
+		};
+		5DC585EC2F0F76AD0050AC0B /* Markdown */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5DC585EB2F0F769C0050AC0B /* XCRemoteSwiftPackageReference "swift-markdown" */;
+			productName = Markdown;
+		};
+		5DC585ED2F0F76B00050AC0B /* Splash */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5DC585EA2F0F55600050AC0B /* XCRemoteSwiftPackageReference "Splash" */;
+			productName = Splash;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 6378F0E02F0F0D0700677FA7 /* Project object */;
 }

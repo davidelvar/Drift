@@ -96,7 +96,7 @@ struct NoteListView: View {
         .toolbar {
             ToolbarItem {
                 Button(action: createNewNote) {
-                    Image(systemName: "square.and.pencil")
+                    Image("new-note")
                 }
                 .help("New Note")
                 .keyboardShortcut("n", modifiers: .command)
@@ -110,7 +110,7 @@ struct NoteListView: View {
                         }
                     }
                 } label: {
-                    Image(systemName: "arrow.up.arrow.down")
+                    Image("sort")
                 }
                 .help("Sort Notes")
             }
