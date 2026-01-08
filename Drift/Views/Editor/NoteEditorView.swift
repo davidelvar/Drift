@@ -212,6 +212,8 @@ struct NoteEditorView: View {
             .padding(.vertical, 16)
             .onChange(of: note.content) { _, _ in
                 note.updatedAt = Date()
+                // Update note title to match the extracted heading
+                note.title = extractedTitle
             }
     }
     
