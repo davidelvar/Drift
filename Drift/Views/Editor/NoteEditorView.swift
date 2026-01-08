@@ -40,18 +40,18 @@ struct NoteEditorView: View {
             // Metadata bar with mode picker on left
             HStack(spacing: 16) {
                 // Editor mode picker - moved to LEFT
-                Picker("Mode", selection: $appState.editorMode) {
-                    ForEach(EditorMode.allCases, id: \.self) { mode in
-                        Label(mode.rawValue, systemImage: mode.icon)
-                            .tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(width: 180)
+                // Picker("Mode", selection: $appState.editorMode) {
+                //     ForEach(EditorMode.allCases, id: \.self) { mode in
+                //         Label(mode.rawValue, systemImage: mode.icon)
+                //             .tag(mode)
+                //     }
+                // }
+                // .pickerStyle(.segmented)
+                // .labelsHidden()
+                // .frame(width: 180)
                 
-                Divider()
-                    .frame(height: 16)
+                // Divider()
+                //     .frame(height: 16)
                 
                 // Formatting buttons (only show in Edit or Split mode)
                 if appState.editorMode != .Preview {
@@ -88,45 +88,18 @@ struct NoteEditorView: View {
                 }
                 
                 Spacer()
-                
-                Label(note.updatedAt.formatted(date: .abbreviated, time: .shortened), systemImage: "clock")
-                
-                Label("\(note.wordCount) words", systemImage: "text.word.spacing")
             }
             .font(.caption)
             .foregroundStyle(.secondary)
-            .padding(.horizontal, 24)
-            .padding(.bottom, 12)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 6)
             
             Divider()
             
             // Button group above editor (top right)
-            HStack(spacing: 12) {
-                Spacer()
-                
-                Button(action: { appState.toggleFocusMode() }) {
-                    Image(systemName: "rectangle.dashed")
-                }
-                .help("Focus Mode (⌘⇧F)")
-                
-                Button(action: { note.togglePin() }) {
-                    Image(systemName: note.isPinned ? "star.fill" : "star")
-                        .foregroundStyle(note.isPinned ? .yellow : .secondary)
-                }
-                .help(note.isPinned ? "Remove from Favorites" : "Add to Favorites")
-                
-                Button(action: { showingInspector.toggle() }) {
-                    Image(systemName: "info.circle")
-                }
-                .help("Note Info")
-                
-                ShareLink(item: note.content) {
-                    Image(systemName: "square.and.arrow.up")
-                }
-                .help("Share")
-            }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 8)
+            
+            .padding(.horizontal, 0)
+            .padding(.vertical, 0)
             .font(.system(size: 14))
             
             // Content area based on mode
@@ -150,7 +123,7 @@ struct NoteEditorView: View {
                                 MarkdownView(content: note.content)
                                     .frame(width: geometry.size.width / 2)
                             }
-                        }
+                        }	
                     }
                 }
                 
@@ -170,10 +143,34 @@ struct NoteEditorView: View {
             }
         }
         .background(Color(red: 0.1137, green: 0.1176, blue: 0.1569))
+        .tint(Color(red: 0.114, green: 0.118, blue: 0.157))
         .frame(minWidth: 500)
         .toolbar {
             ToolbarItemGroup(placement: .principal) {
                 Spacer()
+            }
+            
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button(action: { appState.toggleFocusMode() }) {
+                    Image(systemName: "rectangle.dashed")
+                }
+                .help("Focus Mode (⌘⇧F)")
+                
+                Button(action: { note.togglePin() }) {
+                    Image(systemName: note.isPinned ? "star.fill" : "star")
+                        .foregroundStyle(note.isPinned ? .yellow : .secondary)
+                }
+                .help(note.isPinned ? "Remove from Favorites" : "Add to Favorites")
+                
+                Button(action: { showingInspector.toggle() }) {
+                    Image(systemName: "info.circle")
+                }
+                .help("Note Info")
+                
+                ShareLink(item: note.content) {
+                    Image(systemName: "square.and.arrow.up")
+                }
+                .help("Share")
             }
         }
         .inspector(isPresented: $showingInspector) {
@@ -402,7 +399,7 @@ struct NoteInspectorView: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Note Info")
+//        .navigationTitle("Note Info")
     }
     
     private var availableTags: [Tag] {

@@ -52,6 +52,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5DC585EE2F0F76AD0050AC0B /* Markdown in Frameworks */,
+				5DC585EF2F0F76B00050AC0B /* Splash in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +114,8 @@
 			);
 			name = Drift;
 			packageProductDependencies = (
+				5DC585EC2F0F76AD0050AC0B /* Markdown */,
+				5DC585ED2F0F76B00050AC0B /* Splash */,
 			);
 			productName = Drift;
 			productReference = 6378F0E82F0F0D0700677FA7 /* Drift.app */;
@@ -197,6 +201,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				5DC585EA2F0F55600050AC0B /* XCRemoteSwiftPackageReference "Splash" */,
+				5DC585EB2F0F769C0050AC0B /* XCRemoteSwiftPackageReference "swift-markdown" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 6378F0E92F0F0D0700677FA7 /* Products */;
@@ -270,6 +275,19 @@
 			targetProxy = 6378F1002F0F0D0800677FA7 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		5DC585EC2F0F76AD0050AC0B /* Markdown */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5DC585EB2F0F769C0050AC0B /* XCRemoteSwiftPackageReference "swift-markdown" */;
+			productName = Markdown;
+		};
+		5DC585ED2F0F76B00050AC0B /* Splash */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5DC585EA2F0F55600050AC0B /* XCRemoteSwiftPackageReference "Splash" */;
+			productName = Splash;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCBuildConfiguration section */
 		6378F1072F0F0D0800677FA7 /* Debug */ = {
@@ -584,6 +602,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 0.16.0;
+			};
+		};
+		5DC585EB2F0F769C0050AC0B /* XCRemoteSwiftPackageReference "swift-markdown" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/swiftlang/swift-markdown";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.7.3;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

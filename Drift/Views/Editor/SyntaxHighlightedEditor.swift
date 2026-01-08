@@ -391,5 +391,6 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
     
     return SyntaxHighlightedEditor(text: $text)
         .frame(height: 400)
-        .padding()
+        .padding(.horizontal, 8)
+//        .padding()
 }

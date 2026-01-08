@@ -2,11 +2,12 @@
 //  MarkdownRenderer.swift
 //  Drift
 //
-//  Renders Markdown content to styled SwiftUI views
+//  Renders Markdown content to styled SwiftUI views using Swift Markdown
 //
 
 import SwiftUI
 import AppKit
+import Markdown
 
 // MARK: - Main Markdown View
 struct MarkdownView: View {
@@ -15,8 +16,11 @@ struct MarkdownView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
-                ForEach(Array(parseBlocks().enumerated()), id: \.offset) { _, block in
-                    renderBlock(block)
+                if let document = try? Document(parsing: content) {
+                    MarkdownRenderer(document: document).body
+                } else {
+                    Text("Unable to parse markdown")
+                        .foregroundStyle(.secondary)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -25,179 +29,46 @@ struct MarkdownView: View {
         }
         .background(Color(nsColor: .textBackgroundColor))
     }
+}
+
+// MARK: - Markdown AST Renderer
+struct MarkdownRenderer {
+    let document: Document
     
-    // MARK: - Block Types
-    enum MarkdownBlock: Equatable {
-        case heading(level: Int, text: String)
-        case paragraph(text: String)
-        case codeBlock(language: String?, code: String)
-        case blockquote(text: String)
-        case listItem(ordered: Bool, index: Int, text: String)
-        case horizontalRule
-        case empty
-    }
-    
-    // MARK: - Parse Content into Blocks
-    private func parseBlocks() -> [MarkdownBlock] {
-        var blocks: [MarkdownBlock] = []
-        let lines = content.components(separatedBy: .newlines)
-        var i = 0
-        var listIndex = 0
-        var inCodeBlock = false
-        var codeBlockLanguage: String? = nil
-        var codeBlockLines: [String] = []
-        
-        while i < lines.count {
-            let line = lines[i]
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-            
-            // Handle code blocks
-            if trimmed.hasPrefix("```") {
-                if inCodeBlock {
-                    // End of code block
-                    blocks.append(.codeBlock(language: codeBlockLanguage, code: codeBlockLines.joined(separator: "\n")))
-                    codeBlockLines = []
-                    codeBlockLanguage = nil
-                    inCodeBlock = false
-                } else {
-                    // Start of code block
-                    inCodeBlock = true
-                    codeBlockLanguage = trimmed.count > 3 ? String(trimmed.dropFirst(3)) : nil
-                }
-                i += 1
-                continue
-            }
-            
-            if inCodeBlock {
-                codeBlockLines.append(line)
-                i += 1
-                continue
-            }
-            
-            // Empty line
-            if trimmed.isEmpty {
-                blocks.append(.empty)
-                listIndex = 0
-                i += 1
-                continue
-            }
-            
-            // Heading
-            if let match = trimmed.prefixMatch(of: /^(#{1,6})\s+(.+)$/) {
-                let level = match.1.count
-                let text = String(match.2)
-                blocks.append(.heading(level: level, text: text))
-                i += 1
-                continue
-            }
-            
-            // Horizontal rule
-            if trimmed.prefixMatch(of: /^(-{3,}|\*{3,}|_{3,})$/) != nil {
-                blocks.append(.horizontalRule)
-                i += 1
-                continue
-            }
-            
-            // Blockquote
-            if trimmed.hasPrefix(">") {
-                var quoteLines: [String] = []
-                while i < lines.count && lines[i].trimmingCharacters(in: .whitespaces).hasPrefix(">") {
-                    var quoteLine = lines[i].trimmingCharacters(in: .whitespaces)
-                    quoteLine = String(quoteLine.dropFirst())
-                    if quoteLine.hasPrefix(" ") {
-                        quoteLine = String(quoteLine.dropFirst())
-                    }
-                    quoteLines.append(quoteLine)
-                    i += 1
-                }
-                blocks.append(.blockquote(text: quoteLines.joined(separator: " ")))
-                continue
-            }
-            
-            // Unordered list
-            if trimmed.prefixMatch(of: /^[-*+]\s+(.+)$/) != nil {
-                let text = String(trimmed.dropFirst(2))
-                blocks.append(.listItem(ordered: false, index: 0, text: text))
-                i += 1
-                continue
-            }
-            
-            // Ordered list
-            if let match = trimmed.prefixMatch(of: /^(\d+)\.\s+(.+)$/) {
-                listIndex += 1
-                let text = String(match.2)
-                blocks.append(.listItem(ordered: true, index: listIndex, text: text))
-                i += 1
-                continue
-            }
-            
-            // Regular paragraph
-            blocks.append(.paragraph(text: trimmed))
-            listIndex = 0
-            i += 1
-        }
-        
-        return blocks
-    }
-    
-    // MARK: - Render Block
     @ViewBuilder
-    private func renderBlock(_ block: MarkdownBlock) -> some View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ForEach(Array(document.children.enumerated()), id: \.offset) { _, block in
+                renderMarkdownBlock(block)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func renderMarkdownBlock(_ block: Markup) -> some View {
         switch block {
-        case .heading(let level, let text):
-            renderHeading(level: level, text: text)
-            
-        case .paragraph(let text):
-            styledText(text)
-                .font(.system(size: 15))
-                .lineSpacing(4)
-            
-        case .codeBlock(let language, let code):
-            syntaxHighlightedCode(code, language: language)
-            
-        case .blockquote(let text):
-            HStack(alignment: .top, spacing: 12) {
-                Rectangle()
-                    .fill(Color.blue.opacity(0.6))
-                    .frame(width: 4)
-                
-                styledText(text)
-                    .font(.system(size: 15))
-                    .foregroundStyle(.secondary)
-                    .italic()
-            }
-            .padding(.vertical, 4)
-            
-        case .listItem(let ordered, let index, let text):
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                if ordered {
-                    Text("\(index).")
-                        .font(.system(size: 15))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 24, alignment: .trailing)
-                } else {
-                    Text("•")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 24, alignment: .center)
-                }
-                styledText(text)
-                    .font(.system(size: 15))
-            }
-            
-        case .horizontalRule:
-            Divider()
-                .padding(.vertical, 12)
-            
-        case .empty:
-            Spacer().frame(height: 4)
+        case let heading as Heading:
+            renderHeading(heading)
+        case let paragraph as Paragraph:
+            renderParagraph(paragraph)
+        case let codeBlock as CodeBlock:
+            renderCodeBlock(codeBlock)
+        case let blockQuote as BlockQuote:
+            renderBlockQuote(blockQuote)
+        case let list as UnorderedList:
+            renderUnorderedList(list)
+        case let list as OrderedList:
+            renderOrderedList(list)
+        case is ThematicBreak:
+            Divider().padding(.vertical, 12)
+        default:
+            EmptyView()
         }
     }
     
-    // MARK: - Render Heading
     @ViewBuilder
-    private func renderHeading(level: Int, text: String) -> some View {
-        let font: Font = switch level {
+    private func renderHeading(_ heading: Heading) -> some View {
+        let font: Font = switch heading.level {
         case 1: .system(size: 32, weight: .bold)
         case 2: .system(size: 26, weight: .bold)
         case 3: .system(size: 22, weight: .semibold)
@@ -206,17 +77,30 @@ struct MarkdownView: View {
         default: .system(size: 15, weight: .semibold)
         }
         
-        styledText(text)
-            .font(font)
-            .padding(.top, level <= 2 ? 12 : 6)
-            .padding(.bottom, level <= 2 ? 4 : 2)
+        VStack(alignment: .leading) {
+            renderInlineMarkup(heading)
+                .font(font)
+                .padding(.top, heading.level <= 2 ? 12 : 6)
+                .padding(.bottom, heading.level <= 2 ? 4 : 2)
+        }
     }
     
-    // MARK: - Syntax Highlighting for Code Blocks
     @ViewBuilder
-    private func syntaxHighlightedCode(_ code: String, language: String?) -> some View {
+    private func renderParagraph(_ paragraph: Paragraph) -> some View {
+        VStack(alignment: .leading) {
+            renderInlineMarkup(paragraph)
+                .font(.system(size: 15))
+                .lineSpacing(4)
+        }
+    }
+    
+    @ViewBuilder
+    private func renderCodeBlock(_ codeBlock: CodeBlock) -> some View {
+        let language = codeBlock.language ?? ""
+        let code = codeBlock.code
+        
         VStack(alignment: .leading, spacing: 0) {
-            if let language = language, !language.isEmpty {
+            if !language.isEmpty {
                 Text(language.lowercased())
                     .font(.system(size: 11, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.secondary)
@@ -226,8 +110,9 @@ struct MarkdownView: View {
             }
             
             ScrollView(.horizontal) {
-                syntaxHighlightedText(code, language: language)
+                Text(code)
                     .font(.system(size: 13, design: .monospaced))
+                    .foregroundStyle(.primary)
                     .padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -240,348 +125,128 @@ struct MarkdownView: View {
         )
     }
     
-    private func syntaxHighlightedText(_ code: String, language: String?) -> Text {
-        let lang = language?.lowercased() ?? ""
-        
-        switch lang {
-        case "swift":
-            return highlightSwift(code)
-        case "python":
-            return highlightPython(code)
-        case "javascript", "js":
-            return highlightJavaScript(code)
-        case "json":
-            return highlightJSON(code)
-        case "html", "xml":
-            return highlightHTML(code)
-        default:
-            return Text(code).foregroundStyle(.primary)
+    @ViewBuilder
+    private func renderBlockQuote(_ blockQuote: BlockQuote) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Rectangle()
+                .fill(Color.blue.opacity(0.6))
+                .frame(width: 4)
+            
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(Array(blockQuote.children.enumerated()), id: \.offset) { _, child in
+                    renderMarkdownBlock(child)
+                }
+            }
+            .foregroundStyle(.secondary)
+            .italic()
         }
+        .padding(.vertical, 4)
     }
     
-    private func highlightSwift(_ code: String) -> Text {
-        let keywords = ["let", "var", "func", "class", "struct", "enum", "protocol", "extension", "if", "else", "for", "while", "return", "import", "mutating", "async", "await"]
-        let types = ["String", "Int", "Double", "Bool", "Array", "Dictionary", "Set", "Optional", "View", "State", "Binding", "AppStorage"]
-        
-        return highlightCode(code: code, keywords: keywords, types: types, stringColor: Color(nsColor: .systemRed), keywordColor: Color(nsColor: .systemOrange), typeColor: Color(nsColor: .systemBlue), commentColor: Color.gray)
-    }
-    
-    private func highlightPython(_ code: String) -> Text {
-        let keywords = ["def", "class", "if", "else", "elif", "for", "while", "return", "import", "from", "as", "True", "False", "None", "and", "or", "not", "in", "is"]
-        let types = ["str", "int", "float", "bool", "list", "dict", "set", "tuple"]
-        
-        return highlightCode(code: code, keywords: keywords, types: types, stringColor: Color(nsColor: .systemGreen), keywordColor: Color(nsColor: .systemOrange), typeColor: Color(nsColor: .systemBlue), commentColor: Color.gray)
-    }
-    
-    private func highlightJavaScript(_ code: String) -> Text {
-        let keywords = ["function", "const", "let", "var", "if", "else", "for", "while", "return", "import", "export", "async", "await", "class", "extends", "new", "this", "super"]
-        let types = ["String", "Number", "Boolean", "Array", "Object", "Promise"]
-        
-        return highlightCode(code: code, keywords: keywords, types: types, stringColor: Color(nsColor: .systemGreen), keywordColor: Color(nsColor: .systemRed), typeColor: Color(nsColor: .systemBlue), commentColor: Color.gray)
-    }
-    
-    private func highlightJSON(_ code: String) -> Text {
-        var segments: [Text] = []
-        var i = 0
-        let chars = Array(code)
-        
-        while i < chars.count {
-            if chars[i] == "\"" {
-                if let endQuote = findCharacter(chars: chars, start: i + 1, char: "\"") {
-                    let stringContent = String(chars[i...endQuote])
-                    segments.append(Text(stringContent).foregroundStyle(Color(nsColor: .systemGreen)))
-                    i = endQuote + 1
-                    continue
-                }
-            }
-            
-            if chars[i] == "#" {
-                let comment = String(chars[i...].prefix { $0 != "\n" })
-                segments.append(Text(comment).foregroundStyle(Color.gray))
-                i += comment.count
-                continue
-            }
-            
-            let char = String(chars[i])
-            if "{}[]:,".contains(char) {
-                segments.append(Text(char).foregroundStyle(Color(nsColor: .systemPurple)))
-            } else {
-                segments.append(Text(char).foregroundStyle(.primary))
-            }
-            
-            i += 1
-        }
-        
-        return segments.reduce(Text("")) { $0 + $1 }
-    }
-    
-    private func highlightHTML(_ code: String) -> Text {
-        var segments: [Text] = []
-        var i = 0
-        let chars = Array(code)
-        
-        while i < chars.count {
-            if chars[i] == "<" {
-                if let endTag = findCharacter(chars: chars, start: i + 1, char: ">") {
-                    let tag = String(chars[i...endTag])
-                    segments.append(Text(tag).foregroundStyle(Color(nsColor: .systemRed)))
-                    i = endTag + 1
-                    continue
-                }
-            }
-            
-            if chars[i] == "\"" {
-                if let endQuote = findCharacter(chars: chars, start: i + 1, char: "\"") {
-                    let stringContent = String(chars[i...endQuote])
-                    segments.append(Text(stringContent).foregroundStyle(Color(nsColor: .systemGreen)))
-                    i = endQuote + 1
-                    continue
-                }
-            }
-            
-            let char = String(chars[i])
-            segments.append(Text(char).foregroundStyle(.primary))
-            i += 1
-        }
-        
-        return segments.reduce(Text("")) { $0 + $1 }
-    }
-    
-    private func highlightCode(code: String, keywords: [String], types: [String], stringColor: Color, keywordColor: Color, typeColor: Color, commentColor: Color) -> Text {
-        var segments: [Text] = []
-        var i = 0
-        let chars = Array(code)
-        
-        while i < chars.count {
-            // Skip whitespace
-            if chars[i].isWhitespace {
-                segments.append(Text(String(chars[i])))
-                i += 1
-                continue
-            }
-            
-            // Comments
-            if i + 1 < chars.count && chars[i] == "/" && chars[i + 1] == "/" {
-                let comment = String(chars[i...].prefix { $0 != "\n" })
-                segments.append(Text(comment).foregroundStyle(commentColor))
-                i += comment.count
-                continue
-            }
-            
-            // Multi-line comments
-            if i + 1 < chars.count && chars[i] == "/" && chars[i + 1] == "*" {
-                if let endIdx = findSubstring(chars: chars, start: i + 2, substring: "*/") {
-                    let comment = String(chars[i...(endIdx + 1)])
-                    segments.append(Text(comment).foregroundStyle(commentColor))
-                    i = endIdx + 2
-                    continue
-                }
-            }
-            
-            // Strings
-            if chars[i] == "\"" || chars[i] == "'" || chars[i] == "`" {
-                let quote = chars[i]
-                if let endIdx = findCharacter(chars: chars, start: i + 1, char: quote) {
-                    let stringContent = String(chars[i...endIdx])
-                    segments.append(Text(stringContent).foregroundStyle(stringColor))
-                    i = endIdx + 1
-                    continue
-                }
-            }
-            
-            // Keywords and identifiers
-            if chars[i].isLetter || chars[i] == "_" {
-                var word = ""
-                var j = i
-                while j < chars.count && (chars[j].isLetter || chars[j].isNumber || chars[j] == "_") {
-                    word.append(chars[j])
-                    j += 1
-                }
-                
-                if keywords.contains(word) {
-                    segments.append(Text(word).foregroundStyle(keywordColor))
-                } else if types.contains(word) {
-                    segments.append(Text(word).foregroundStyle(typeColor))
-                } else {
-                    segments.append(Text(word))
-                }
-                
-                i = j
-                continue
-            }
-            
-            // Numbers
-            if chars[i].isNumber {
-                var number = ""
-                var j = i
-                while j < chars.count && (chars[j].isNumber || chars[j] == ".") {
-                    number.append(chars[j])
-                    j += 1
-                }
-                segments.append(Text(number).foregroundStyle(Color(nsColor: .systemCyan)))
-                i = j
-                continue
-            }
-            
-            // Operators and punctuation
-            let char = String(chars[i])
-            if "{}[]().,;:+-*/<>=!&|?~".contains(char) {
-                segments.append(Text(char).foregroundStyle(Color(nsColor: .systemPurple)))
-            } else {
-                segments.append(Text(char))
-            }
-            
-            i += 1
-        }
-        
-        return segments.reduce(Text("")) { $0 + $1 }
-    }
-    
-    private func findSubstring(chars: [Character], start: Int, substring: String) -> Int? {
-        let subChars = Array(substring)
-        for i in start...(chars.count - subChars.count) {
-            if chars[i..<(i + subChars.count)].elementsEqual(subChars) {
-                return i
-            }
-        }
-        return nil
-    }
-    
-    // MARK: - Styled Text with Inline Markdown
-    private func styledText(_ text: String) -> Text {
-        // Parse all inline styles and build Text
-        let segments = parseInlineMarkdown(text)
-        return segments.reduce(Text("")) { $0 + $1 }
-    }
-    
-    private func parseInlineMarkdown(_ text: String) -> [Text] {
-        guard !text.isEmpty else { return [] }
-        
-        var segments: [Text] = []
-        var i = 0
-        let chars = Array(text)
-        let count = chars.count
-        
-        while i < count {
-            // Bold + Italic (***text***)
-            if i + 6 < count && chars[i] == "*" && chars[i+1] == "*" && chars[i+2] == "*" {
-                if let endIdx = findClosingMarker(chars: chars, start: i + 3, marker: ["*", "*", "*"]) {
-                    let content = String(chars[(i+3)..<endIdx])
-                    segments.append(Text(content).bold().italic())
-                    i = endIdx + 3
-                    continue
-                }
-            }
-            
-            // Bold (**text**)
-            if i + 4 < count && chars[i] == "*" && chars[i+1] == "*" && (i + 2 >= count || chars[i+2] != "*") {
-                if let endIdx = findClosingMarker(chars: chars, start: i + 2, marker: ["*", "*"]) {
-                    let content = String(chars[(i+2)..<endIdx])
-                    segments.append(Text(content).bold())
-                    i = endIdx + 2
-                    continue
-                }
-            }
-            
-            // Strikethrough (~~text~~)
-            if i + 4 < count && chars[i] == "~" && chars[i+1] == "~" {
-                if let endIdx = findClosingMarker(chars: chars, start: i + 2, marker: ["~", "~"]) {
-                    let content = String(chars[(i+2)..<endIdx])
-                    segments.append(Text(content).strikethrough())
-                    i = endIdx + 2
-                    continue
-                }
-            }
-            
-            // Italic with asterisk (*text*) - but not **
-            if i + 2 < count && chars[i] == "*" && (i + 1 >= count || chars[i+1] != "*") {
-                if let endIdx = findClosingMarker(chars: chars, start: i + 1, marker: ["*"]) {
-                    // Make sure it's not followed by another *
-                    if endIdx + 1 >= count || chars[endIdx + 1] != "*" {
-                        let content = String(chars[(i+1)..<endIdx])
-                        if !content.isEmpty && !content.hasPrefix(" ") && !content.hasSuffix(" ") {
-                            segments.append(Text(content).italic())
-                            i = endIdx + 1
-                            continue
+    @ViewBuilder
+    private func renderUnorderedList(_ list: UnorderedList) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(Array(list.children.enumerated()), id: \.offset) { _, item in
+                if let listItem = item as? ListItem {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text("•")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 24, alignment: .center)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            ForEach(Array(listItem.children.enumerated()), id: \.offset) { _, child in
+                                renderMarkdownBlock(child)
+                            }
                         }
                     }
                 }
             }
-            
-            // Italic with underscore (_text_)
-            if i + 2 < count && chars[i] == "_" && (i + 1 >= count || chars[i+1] != "_") {
-                if let endIdx = findClosingMarker(chars: chars, start: i + 1, marker: ["_"]) {
-                    let content = String(chars[(i+1)..<endIdx])
-                    if !content.isEmpty && !content.hasPrefix(" ") && !content.hasSuffix(" ") {
-                        segments.append(Text(content).italic())
-                        i = endIdx + 1
-                        continue
+        }
+    }
+    
+    @ViewBuilder
+    private func renderOrderedList(_ list: OrderedList) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(Array(list.children.enumerated()), id: \.offset) { index, item in
+                if let listItem = item as? ListItem {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text("\(index + 1).")
+                            .font(.system(size: 15))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 24, alignment: .trailing)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            ForEach(Array(listItem.children.enumerated()), id: \.offset) { _, child in
+                                renderMarkdownBlock(child)
+                            }
+                        }
                     }
                 }
             }
-            
-            // Inline code (`code`)
-            if chars[i] == "`" && (i + 1 >= count || chars[i+1] != "`") {
-                if let endIdx = findClosingMarker(chars: chars, start: i + 1, marker: ["`"]) {
-                    let content = String(chars[(i+1)..<endIdx])
-                    segments.append(Text(content)
+        }
+    }
+    
+    private func renderInlineMarkup(_ container: Markup) -> SwiftUI.Text {
+        let segments = renderInlineSegments(container)
+        return segments.reduce(SwiftUI.Text("")) { $0 + $1 }
+    }
+    
+    private func renderInlineSegments(_ container: Markup) -> [SwiftUI.Text] {
+        var segments: [SwiftUI.Text] = []
+        
+        for child in container.children {
+            switch child {
+            case let text as Markdown.Text:
+                segments.append(SwiftUI.Text(text.plainText))
+                
+            case let softBreak as SoftBreak:
+                segments.append(SwiftUI.Text(" "))
+                
+            case let lineBreak as LineBreak:
+                segments.append(SwiftUI.Text("\n"))
+                
+            case let strong as Strong:
+                let innerSegments = renderInlineSegments(strong)
+                let combined = innerSegments.reduce(SwiftUI.Text("")) { $0 + $1 }
+                segments.append(combined.bold())
+                
+            case let emphasis as Emphasis:
+                let innerSegments = renderInlineSegments(emphasis)
+                let combined = innerSegments.reduce(SwiftUI.Text("")) { $0 + $1 }
+                segments.append(combined.italic())
+                
+            case let strikethrough as Strikethrough:
+                let innerSegments = renderInlineSegments(strikethrough)
+                let combined = innerSegments.reduce(SwiftUI.Text("")) { $0 + $1 }
+                segments.append(combined.strikethrough())
+                
+            case let code as InlineCode:
+                segments.append(
+                    SwiftUI.Text(code.code)
                         .font(.system(size: 14, design: .monospaced))
-                        .foregroundColor(Color(nsColor: .systemPink)))
-                    i = endIdx + 1
-                    continue
-                }
+                        .foregroundStyle(Color(nsColor: .systemPink))
+                )
+                
+            case let link as Markdown.Link:
+                let innerSegments = renderInlineSegments(link)
+                let combined = innerSegments.reduce(SwiftUI.Text("")) { $0 + $1 }
+                segments.append(
+                    combined
+                        .foregroundStyle(.blue)
+                        .underline()
+                )
+                
+            default:
+                let innerSegments = renderInlineSegments(child)
+                segments.append(contentsOf: innerSegments)
             }
-            
-            // Link [text](url)
-            if chars[i] == "[" {
-                if let closeBracket = findCharacter(chars: chars, start: i + 1, char: "]"),
-                   closeBracket + 1 < count && chars[closeBracket + 1] == "(",
-                   let closeParen = findCharacter(chars: chars, start: closeBracket + 2, char: ")") {
-                    let linkText = String(chars[(i+1)..<closeBracket])
-                    segments.append(Text(linkText)
-                        .foregroundColor(.blue)
-                        .underline())
-                    i = closeParen + 1
-                    continue
-                }
-            }
-            
-            // Regular character
-            segments.append(Text(String(chars[i])))
-            i += 1
         }
         
         return segments
     }
-    
-    private func findClosingMarker(chars: [Character], start: Int, marker: [Character]) -> Int? {
-        let count = chars.count
-        var i = start
-        while i <= count - marker.count {
-            var found = true
-            for (j, m) in marker.enumerated() {
-                if chars[i + j] != m {
-                    found = false
-                    break
-                }
-            }
-            if found {
-                return i
-            }
-            i += 1
-        }
-        return nil
-    }
-    
-    private func findCharacter(chars: [Character], start: Int, char: Character) -> Int? {
-        for i in start..<chars.count {
-            if chars[i] == char {
-                return i
-            }
-        }
-        return nil
-    }
 }
+
 
 #Preview {
     MarkdownView(content: """
