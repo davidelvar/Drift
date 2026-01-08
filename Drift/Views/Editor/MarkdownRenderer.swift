@@ -123,16 +123,6 @@ extension Theme {
                 .foregroundColor(DraculaColors.foreground)
                 .markdownMargin(top: 0, bottom: 8)
         }
-        // Bulleted list markers
-        .bulletedListMarker { marker in
-            Text(marker)
-                .foregroundColor(DraculaColors.magenta)
-        }
-        // Numbered list markers
-        .numberedListMarker { marker in
-            Text(marker)
-                .foregroundColor(DraculaColors.magenta)
-        }
         // Thematic break (horizontal rule)
         .thematicBreak {
             Divider()
