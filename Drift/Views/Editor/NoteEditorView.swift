@@ -593,13 +593,29 @@ struct STTextViewRepresentable: NSViewRepresentable {
         textView.isEditable = isEditable
         textView.isSelectable = true
         
+        // Markdown-specific settings
+        textView.isAutomaticSpellingCorrectionEnabled = true
+        textView.isAutomaticQuoteSubstitutionEnabled = false // Don't auto-convert quotes in markdown
+        textView.isAutomaticDashSubstitutionEnabled = false  // Don't convert -- to em-dash in markdown
+        
+        // Typography settings for better markdown readability
+        let paragraphStyle = NSParagraphStyle.default.mutableCopy() as! NSMutableParagraphStyle
+        paragraphStyle.lineHeightMultiple = 1.5  // Better spacing for markdown
+        paragraphStyle.defaultTabInterval = 32   // 4-space indent
+        textView.defaultParagraphStyle = paragraphStyle
+        
         // Configure scroll view
         scrollView.documentView = textView
         scrollView.hasVerticalScroller = true
-        scrollView.hasHorizontalScroller = true
+        scrollView.hasHorizontalScroller = false  // Don't wrap for markdown readability
         scrollView.autohidesScrollers = true
         scrollView.drawsBackground = true
         scrollView.backgroundColor = backgroundColor
+        
+        // Configure text view for markdown editing
+        textView.isHorizontallyResizable = false
+        textView.isVerticallyResizable = true
+        textView.textContainer?.widthTracksTextView = true
         
         return scrollView
     }
@@ -611,7 +627,12 @@ struct STTextViewRepresentable: NSViewRepresentable {
         }
         
         if textView.string != text {
+            let cursorPosition = textView.selectedRange.location
             textView.string = text
+            // Restore cursor position if still valid
+            if cursorPosition <= text.count {
+                textView.setSelectedRange(NSRange(location: cursorPosition, length: 0))
+            }
         }
     }
     
@@ -630,8 +651,31 @@ struct STTextViewRepresentable: NSViewRepresentable {
             guard let textView = notification.object as? NSTextView else { return }
             self.text = textView.string
         }
+        
+        // Support smart markdown formatting
+        func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+            if commandSelector == #selector(NSTextView.insertNewline(_:)) {
+                // Handle smart list continuation (- item -> new line gets -)
+                let currentLine = getCurrentLine(from: textView)
+                if currentLine.trimmingCharacters(in: .whitespaces).hasPrefix("- ") ||
+                   currentLine.trimmingCharacters(in: .whitespaces).hasPrefix("* ") {
+                    textView.insertNewline(nil)
+                    let indent = currentLine.prefix(while: { $0.isWhitespace })
+                    textView.insertText(indent + "- ", replacementRange: textView.selectedRange)
+                    return true
+                }
+            }
+            return false
+        }
+        
+        private func getCurrentLine(from textView: NSTextView) -> String {
+            let text = textView.string as NSString
+            let range = text.lineRange(for: NSRange(location: textView.selectedRange.location, length: 0))
+            return text.substring(with: range)
+        }
     }
 }
+
 
 #Preview {
     let note = Note(title: "Sample Note", content: "This is a sample note with some content to preview.")
