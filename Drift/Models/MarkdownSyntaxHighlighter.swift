@@ -226,4 +226,30 @@ struct MarkdownSyntaxHighlighter {
         }
         return nil
     }
+    
+    /// Apply highlighting to an NSAttributedString
+    /// - Parameters:
+    ///   - text: The markdown text
+    ///   - font: The base font to use
+    /// - Returns: An attributed string with markdown highlighting applied
+    static func attributedString(from text: String, with font: NSFont = NSFont(name: "Menlo", size: 13) ?? NSFont.systemFont(ofSize: 13)) -> NSAttributedString {
+        let attributedString = NSMutableAttributedString(string: text, attributes: [
+            .font: font,
+            .foregroundColor: draculaColors.text
+        ])
+        
+        let highlights = highlight(text: text)
+        
+        for highlight in highlights {
+            attributedString.addAttribute(.foregroundColor, value: highlight.color, range: highlight.range)
+            
+            // Apply bold formatting if needed
+            if highlight.isBold {
+                let boldFont = NSFont(name: "Menlo-Bold", size: font.pointSize) ?? NSFont.boldSystemFont(ofSize: font.pointSize)
+                attributedString.addAttribute(.font, value: boldFont, range: highlight.range)
+            }
+        }
+        
+        return attributedString
+    }
 }

@@ -187,6 +187,7 @@ struct NoteEditorView: View {
         CodeEditor(text: $note.content, position: $editorPosition, messages: .constant(Set()), language: .none)
             .environment(\.codeEditorTheme, draculaTheme)
             .focused($isContentFocused)
+            .withMarkdownHighlighting(text: note.content)
             .onChange(of: note.content) { oldValue, newValue in
                 // Only update if content actually changed from original
                 if originalContent.isEmpty {
