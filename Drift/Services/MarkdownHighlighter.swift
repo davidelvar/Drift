@@ -38,26 +38,26 @@ class MarkdownHighlighter {
         // 3. Links and images
         applyHighlighting(pattern: "!?\\[[^\\]]*\\]\\([^)]*\\)", text: text, storage: storage, color: colors.link)
         
-        // 4. Bold (must come before italic to prevent conflicts)
+        // 4. Lists BEFORE italic/bold (to prevent asterisks in list markers being matched)
+        applyHighlighting(pattern: "^\\s*[-+]\\s+.*$", text: text, storage: storage, color: colors.list)  // - or + (safe)
+        applyHighlighting(pattern: "^\\s*\\d+\\.\\s+.*$", text: text, storage: storage, color: colors.list) // numbered
+        
+        // 5. Bold (must come before italic to prevent conflicts)
         applyHighlighting(pattern: "\\*\\*[^*]+\\*\\*|__[^_]+__", text: text, storage: storage, color: colors.bold)
         
-        // 5. Strikethrough
+        // 6. Strikethrough
         applyHighlighting(pattern: "~~[^~]+~~", text: text, storage: storage, color: colors.strikethrough)
         
-        // 6. Italic (single delimiters, but be careful with asterisks)
+        // 7. Italic (single delimiters, but be careful with asterisks)
         applyHighlighting(pattern: "_[^_]+_", text: text, storage: storage, color: colors.italic)
         // For *text*, require word boundaries to avoid false positives
         applyHighlighting(pattern: "\\*[^*\\s][^*]*[^*\\s]\\*", text: text, storage: storage, color: colors.italic)
         
-        // 7. Blockquotes
+        // 8. Blockquotes
         applyHighlighting(pattern: "^>.*$", text: text, storage: storage, color: colors.blockquote)
         
-        // 8. Headers
+        // 9. Headers
         applyHighlighting(pattern: "^#{1,6}\\s+.*$", text: text, storage: storage, color: colors.heading)
-        
-        // 9. Lists
-        applyHighlighting(pattern: "^\\s*[-*+]\\s+.*$", text: text, storage: storage, color: colors.list)
-        applyHighlighting(pattern: "^\\s*\\d+\\.\\s+.*$", text: text, storage: storage, color: colors.list)
     }
     
     private static func highlightCodeBlocks(text: String, storage: NSTextStorage) {
