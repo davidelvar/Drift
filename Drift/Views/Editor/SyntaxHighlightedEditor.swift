@@ -10,7 +10,7 @@ import AppKit
 
 // MARK: - Dracula Theme Colors
 struct DraculaTheme {
-    static let background = NSColor(red: 0.1256, green: 0.132, blue: 0.1696, alpha: 1.0) // #202328 (20% darker)
+    static let background = NSColor(red: 0.1137, green: 0.1176, blue: 0.1569, alpha: 1.0) // #1D1E28
     static let foreground = NSColor(red: 0.973, green: 0.973, blue: 0.949, alpha: 1.0) // #f8f8f2
     static let comment = NSColor(red: 0.388, green: 0.447, blue: 0.643, alpha: 1.0) // #6272a4
     static let cyan = NSColor(red: 0.549, green: 0.915, blue: 0.993, alpha: 1.0) // #8be9fd

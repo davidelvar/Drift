@@ -90,6 +90,7 @@ struct NoteListView: View {
                 .id(sortOrder)  // Force list refresh when sort order changes
             }
         }
+        .background(Color(red: 0.1137, green: 0.1176, blue: 0.1569))
         .frame(minWidth: 250, idealWidth: 300)
         .toolbar {
             ToolbarItem {
