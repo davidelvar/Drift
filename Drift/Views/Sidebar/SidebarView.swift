@@ -67,9 +67,6 @@ struct SidebarView: View {
                     SidebarRow(item: .folder(folder), count: folderCount(folder))
                         .tag(SidebarItem.folder(folder))
                         .contextMenu {
-                            Button("Rename", systemImage: "pencil") {
-                                // TODO: Implement rename
-                            }
                             Button("Delete", systemImage: "trash", role: .destructive) {
                                 deleteFolder(folder)
                             }
@@ -100,12 +97,14 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
+        .scrollContentBackground(.hidden)
         .frame(minWidth: 200)
         .safeAreaInset(edge: .top) {
             HStack(spacing: 6) {
-                Image(systemName: "wind")
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(.blue)
+                Image("DriftLogo")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 18, height: 18)
                 Text("Drift")
                     .font(.system(size: 15, weight: .semibold))
             }
@@ -151,34 +150,6 @@ struct SidebarView: View {
         
         for folder in Folder.createDefaultFolders() {
             modelContext.insert(folder)
-        }
-    }
-}
-
-// MARK: - Sidebar Row
-struct SidebarRow: View {
-    let item: SidebarItem
-    var count: Int = 0
-    
-    var body: some View {
-        HStack {
-            Label {
-                Text(item.title)
-            } icon: {
-                Image(systemName: item.icon)
-                    .foregroundStyle(item.color)
-            }
-            
-            Spacer()
-            
-            if count > 0 {
-                Text("\(count)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(.quaternary, in: Capsule())
-            }
         }
     }
 }

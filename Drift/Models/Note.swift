@@ -28,8 +28,27 @@ final class Note {
     
     // Computed properties
     var preview: String {
-        let stripped = content.replacingOccurrences(of: #"[#*_`~\[\]()]"#, with: "", options: .regularExpression)
-        return String(stripped.prefix(150))
+        let lines = content.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+        var startIndex = 0
+        
+        // Find the first non-empty, non-heading line (or skip heading if it exists)
+        var foundHeading = false
+        for (index, line) in lines.enumerated() {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix("#") {
+                foundHeading = true
+            } else if !trimmed.isEmpty {
+                startIndex = index
+                break
+            }
+        }
+        
+        // Get text from starting position, first 60 characters, replacing newlines with spaces
+        let previewText = lines[startIndex...].joined(separator: " ")
+        let stripped = previewText.replacingOccurrences(of: #"[#*_`~\[\]()]"#, with: "", options: .regularExpression)
+        let cleaned = stripped.trimmingCharacters(in: .whitespaces)
+        
+        return String(cleaned.prefix(120))
     }
     
     var wordCount: Int {
@@ -38,6 +57,34 @@ final class Note {
     
     var characterCount: Int {
         content.count
+    }
+    
+    var extractedTitle: String {
+        let lines = content.split(separator: "\n", omittingEmptySubsequences: false)
+        
+        // Find highest level heading (lowest # count)
+        var highestLevel = 7 // Start higher than h6
+        var foundTitle = ""
+        
+        for line in lines {
+            let trimmedLine = line.trimmingCharacters(in: .whitespaces)
+            
+            // Check if line starts with # (heading)
+            if trimmedLine.hasPrefix("#") {
+                let hashCount = trimmedLine.prefix(while: { $0 == "#" }).count
+                
+                if hashCount < highestLevel {
+                    highestLevel = hashCount
+                    // Extract text after the # symbols
+                    let titleText = trimmedLine
+                        .dropFirst(hashCount)
+                        .trimmingCharacters(in: .whitespaces)
+                    foundTitle = String(titleText)
+                }
+            }
+        }
+        
+        return foundTitle.isEmpty ? "Untitled" : foundTitle
     }
     
     init(

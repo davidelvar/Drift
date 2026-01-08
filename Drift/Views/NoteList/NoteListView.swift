@@ -87,9 +87,11 @@ struct NoteListView: View {
                         }
                 }
                 .listStyle(.inset)
+                .scrollContentBackground(.hidden)
                 .id(sortOrder)  // Force list refresh when sort order changes
             }
         }
+        .background(Color(red: 0.1137, green: 0.1176, blue: 0.1569))
         .frame(minWidth: 250, idealWidth: 300)
         .toolbar {
             ToolbarItem {
@@ -252,7 +254,7 @@ struct NoteRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text(note.title.isEmpty ? "Untitled" : note.title)
+                Text(note.extractedTitle)
                     .font(.headline)
                     .lineLimit(1)
                 
@@ -279,7 +281,7 @@ struct NoteRowView: View {
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 8)
         .onHover { hovering in
             isHovering = hovering
         }

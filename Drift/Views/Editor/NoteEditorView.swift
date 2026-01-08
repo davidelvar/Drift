@@ -27,40 +27,31 @@ struct NoteEditorView: View {
     @Bindable var note: Note
     @Bindable var appState: AppState
     
+    @AppStorage("editorFont") private var editorFont = "Menlo"
+    
     @State private var showingInspector = false
     @State private var selectedRange: NSRange?
+    @State private var originalContent: String = ""
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isContentFocused: Bool
     
     var body: some View {
         VStack(spacing: 0) {
-            // Title field
-            TextField("Title", text: $note.title)
-                .font(.system(size: 28, weight: .bold))
-                .textFieldStyle(.plain)
-                .focused($isTitleFocused)
-                .padding(.horizontal, 24)
-                .padding(.top, 20)
-                .padding(.bottom, 8)
-                .onChange(of: note.title) { _, _ in
-                    note.updatedAt = Date()
-                }
-            
             // Metadata bar with mode picker on left
             HStack(spacing: 16) {
                 // Editor mode picker - moved to LEFT
-                Picker("Mode", selection: $appState.editorMode) {
-                    ForEach(EditorMode.allCases, id: \.self) { mode in
-                        Label(mode.rawValue, systemImage: mode.icon)
-                            .tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(width: 180)
+                // Picker("Mode", selection: $appState.editorMode) {
+                //     ForEach(EditorMode.allCases, id: \.self) { mode in
+                //         Label(mode.rawValue, systemImage: mode.icon)
+                //             .tag(mode)
+                //     }
+                // }
+                // .pickerStyle(.segmented)
+                // .labelsHidden()
+                // .frame(width: 180)
                 
-                Divider()
-                    .frame(height: 16)
+                // Divider()
+                //     .frame(height: 16)
                 
                 // Formatting buttons (only show in Edit or Split mode)
                 if appState.editorMode != .Preview {
@@ -97,54 +88,78 @@ struct NoteEditorView: View {
                 }
                 
                 Spacer()
-                
-                Label(note.updatedAt.formatted(date: .abbreviated, time: .shortened), systemImage: "clock")
-                
-                Label("\(note.wordCount) words", systemImage: "text.word.spacing")
             }
             .font(.caption)
             .foregroundStyle(.secondary)
-            .padding(.horizontal, 24)
-            .padding(.bottom, 12)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 6)
             
             Divider()
             
+            // Button group above editor (top right)
+            
+            .padding(.horizontal, 0)
+            .padding(.vertical, 0)
+            .font(.system(size: 14))
+            
             // Content area based on mode
-            Group {
-                switch appState.editorMode {
-                case .Edit:
-                    editorView
-                    
-                case .Preview:
-                    MarkdownView(content: note.content)
-                    
-                case .Split:
-                    GeometryReader { geometry in
-                        HStack(spacing: 0) {
-                            editorView
-                                .frame(width: geometry.size.width / 2)
-                            
-                            Divider()
-                            
-                            MarkdownView(content: note.content)
-                                .frame(width: geometry.size.width / 2)
-                        }
+            ZStack(alignment: .bottomTrailing) {
+                Group {
+                    switch appState.editorMode {
+                    case .Edit:
+                        editorView
+                        
+                    case .Preview:
+                        MarkdownView(content: note.content)
+                            .padding(.leading, 16)
+                        
+                    case .Split:
+                        GeometryReader { geometry in
+                            HStack(spacing: 0) {
+                                editorView
+                                    .frame(width: geometry.size.width / 2)
+                                
+                                Divider()
+                                
+                                MarkdownView(content: note.content)
+                                    .frame(width: geometry.size.width / 2)
+                                    .padding(.leading, 16)
+                            }
+                        }	
                     }
                 }
+                
+                // Mode picker - bottom right with glass effect
+                Picker("Mode", selection: $appState.editorMode) {
+                    ForEach(EditorMode.allCases, id: \.self) { mode in
+                        Label(mode.rawValue, systemImage: mode.icon)
+                            .tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 180)
+                .padding(16)
+                .background(Color.black.opacity(0.2))
+                .cornerRadius(12)
             }
         }
-        .background(Color(nsColor: .textBackgroundColor))
+        .background(Color(red: 0.0745, green: 0.0784, blue: 0.1098))
+        .tint(Color(red: 0.114, green: 0.118, blue: 0.157))
         .frame(minWidth: 500)
         .toolbar {
-            ToolbarItemGroup {
+            ToolbarItemGroup(placement: .principal) {
+                Spacer()
+            }
+            
+            ToolbarItemGroup(placement: .primaryAction) {
                 Button(action: { appState.toggleFocusMode() }) {
-                    Image(systemName: "rectangle.dashed")
+                    Image("focus")
                 }
                 .help("Focus Mode (⌘⇧F)")
                 
                 Button(action: { note.togglePin() }) {
-                    Image(systemName: note.isPinned ? "star.fill" : "star")
-                        .foregroundStyle(note.isPinned ? .yellow : .secondary)
+                    Image(note.isPinned ? "star-full" : "star-empty")
                 }
                 .help(note.isPinned ? "Remove from Favorites" : "Add to Favorites")
                 
@@ -166,14 +181,22 @@ struct NoteEditorView: View {
     }
     
     private var editorView: some View {
-        TextEditor(text: $note.content)
-            .font(.system(size: 15, design: .default))
+        SyntaxHighlightedEditor(text: $note.content, font: editorFont, fontSize: 15)
             .scrollContentBackground(.hidden)
             .focused($isContentFocused)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 16)
-            .onChange(of: note.content) { _, _ in
-                note.updatedAt = Date()
+            .onChange(of: note.content) { oldValue, newValue in
+                // Only update if content actually changed from original
+                if originalContent.isEmpty {
+                    originalContent = oldValue
+                }
+                if newValue != originalContent {
+                    note.updatedAt = Date()
+                    note.title = note.extractedTitle
+                }
+            }
+            .onAppear {
+                // Store original content when note loads
+                originalContent = note.content
             }
     }
     
@@ -377,7 +400,7 @@ struct NoteInspectorView: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Note Info")
+//        .navigationTitle("Note Info")
     }
     
     private var availableTags: [Tag] {
@@ -521,9 +544,10 @@ extension Color {
 struct EmptyEditorView: View {
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "note.text")
-                .font(.system(size: 64))
-                .foregroundStyle(.tertiary)
+            Image("select-note")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 64, height: 64)
             
             Text("Select a note")
                 .font(.title2)
@@ -534,7 +558,7 @@ struct EmptyEditorView: View {
                 .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(nsColor: .textBackgroundColor))
+        .background(Color(red: 0.0745, green: 0.0784, blue: 0.1098))
     }
 }
 
