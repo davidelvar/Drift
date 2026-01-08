@@ -144,7 +144,7 @@ struct NoteEditorView: View {
                 .cornerRadius(12)
             }
         }
-        .background(Color(red: 0.1137, green: 0.1176, blue: 0.1569))
+        .background(Color(red: 0.0745, green: 0.0784, blue: 0.1098))
         .tint(Color(red: 0.114, green: 0.118, blue: 0.157))
         .frame(minWidth: 500)
         .toolbar {
@@ -154,13 +154,12 @@ struct NoteEditorView: View {
             
             ToolbarItemGroup(placement: .primaryAction) {
                 Button(action: { appState.toggleFocusMode() }) {
-                    Image(systemName: "rectangle.dashed")
+                    Image("focus")
                 }
                 .help("Focus Mode (⌘⇧F)")
                 
                 Button(action: { note.togglePin() }) {
-                    Image(systemName: note.isPinned ? "star.fill" : "star")
-                        .foregroundStyle(note.isPinned ? .yellow : .secondary)
+                    Image(note.isPinned ? "star-full" : "star-empty")
                 }
                 .help(note.isPinned ? "Remove from Favorites" : "Add to Favorites")
                 
@@ -545,9 +544,10 @@ extension Color {
 struct EmptyEditorView: View {
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "note.text")
-                .font(.system(size: 64))
-                .foregroundStyle(.tertiary)
+            Image("select-note")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 64, height: 64)
             
             Text("Select a note")
                 .font(.title2)
@@ -558,7 +558,7 @@ struct EmptyEditorView: View {
                 .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(red: 0.1137, green: 0.1176, blue: 0.1569))
+        .background(Color(red: 0.0745, green: 0.0784, blue: 0.1098))
     }
 }
 
