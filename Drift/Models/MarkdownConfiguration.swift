@@ -18,51 +18,59 @@ extension LanguageConfiguration {
         
         // MARK: - Regex Patterns for Markdown
         
+        // Headings: # ## ### etc - capture as identifiers for prominent coloring
+        // Matches: # Heading, ## Subheading, etc.
+        let identifierRegex = Regex {
+            ChoiceOf {
+                /^#{1,6}\s+[^\n]*$/  // Headings
+                /\[[^\]]*\]\([^\)]*\)/ // Links [text](url)
+            }
+        }
+        
         // Inline code: backtick-enclosed text
         // Matches: `code text`
         let stringRegex = Regex {
             /`[^`]+`/
         }
         
-        // Code blocks: triple backtick fences
-        // Matches: ```
+        // Bold text: **text** or __text__
+        // Matches bold formatting
         let characterRegex = Regex {
-            /```/
-        }
-        
-        // Links: [text](url) pattern
-        // Matches: [link text](https://example.com)
-        let identifierRegex = Regex {
-            /\[[^\]]*\]\([^\)]*\)/
-        }
-        
-        // Markdown operators: special characters for formatting
-        // Matches: **, __, *, _, ~~, #, -, +, >
-        let operatorRegex = Regex {
             ChoiceOf {
-                "\\*\\*"   // bold **
-                "__"       // bold __
-                "~~"       // strikethrough  
-                /[*_#\-+>]/ // individual operators
+                /\*\*[^*]+\*\*/      // **bold**
+                /__[^_]+__/          // __bold__
             }
         }
         
-        // Numbers: for lists
+        // Markdown operators: list markers, blockquotes, code fences, etc
+        // Matches: -, *, +, >, ```, etc
+        let operatorRegex = Regex {
+            ChoiceOf {
+                /```/                // Code fence
+                /^>\s+/              // Blockquote
+                /^[-*+]\s+/          // List markers at line start
+                /\*[^*]+\*/          // *italic*
+                /_[^_]+_/            // _italic_
+                /~~[^~]+~~/          // ~~strikethrough~~
+            }
+        }
+        
+        // Numbers: for numbered lists
         let numberRegex = Regex {
-            /\d+/
+            /^\d+\./
         }
         
         return LanguageConfiguration(
             name: "Markdown",
             supportsSquareBrackets: true,
             supportsCurlyBrackets: false,
-            stringRegex: stringRegex,               // Inline code → strings (green)
-            characterRegex: characterRegex,         // Code fences → characters (yellow)
-            numberRegex: numberRegex,               // Numbers for lists
+            stringRegex: stringRegex,               // Inline code → cyan
+            characterRegex: characterRegex,         // Bold → yellow
+            numberRegex: numberRegex,               // List numbers → yellow
             singleLineComment: nil,
             nestedComment: (open: "<!--", close: "-->"),
-            identifierRegex: identifierRegex,       // Links → identifiers (cyan)
-            operatorRegex: operatorRegex,           // Markdown operators (orange)
+            identifierRegex: identifierRegex,       // Headings & links → cyan
+            operatorRegex: operatorRegex,           // Operators → yellow
             reservedIdentifiers: [],
             reservedOperators: [
                 "**", "__", "*", "_", "`", "~~", "#", "-", "+", ">"

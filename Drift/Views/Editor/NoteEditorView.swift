@@ -210,16 +210,16 @@ struct NoteEditorView: View {
               fontSize: 13.0,
               textColour: NSColor(red: 0.98, green: 0.98, blue: 0.98, alpha: 1.0),        // #f8f8f2
               commentColour: NSColor(red: 0.51, green: 0.54, blue: 0.59, alpha: 1.0),     // #6272a4 (blockquotes)
-              stringColour: NSColor(red: 0.57, green: 0.93, blue: 0.96, alpha: 1.0),      // #8be9fd (code blocks)
-              characterColour: NSColor(red: 0.94, green: 0.80, blue: 0.55, alpha: 1.0),   // #f1d656 (code fences)
-              numberColour: NSColor(red: 0.94, green: 0.80, blue: 0.55, alpha: 1.0),      // #f1d656 (list numbers)
-              identifierColour: NSColor(red: 0.57, green: 0.93, blue: 0.96, alpha: 1.0),  // #8be9fd (links)
-              operatorColour: NSColor(red: 0.94, green: 0.80, blue: 0.55, alpha: 1.0),    // #f1d656 (markdown operators)
-              keywordColour: NSColor(red: 0.97, green: 0.59, blue: 0.75, alpha: 1.0),     // #f55bcf (headings/bold)
+              stringColour: NSColor(red: 0.57, green: 0.93, blue: 0.96, alpha: 1.0),      // #8be9fd (inline code)
+              characterColour: NSColor(red: 0.97, green: 0.59, blue: 0.75, alpha: 1.0),   // #f55bcf (bold)
+              numberColour: NSColor(red: 0.97, green: 0.59, blue: 0.75, alpha: 1.0),      // #f55bcf (list numbers)
+              identifierColour: NSColor(red: 0.57, green: 0.93, blue: 0.96, alpha: 1.0),  // #8be9fd (headings/links)
+              operatorColour: NSColor(red: 0.97, green: 0.59, blue: 0.75, alpha: 1.0),    // #f55bcf (italic/strikethrough/operators)
+              keywordColour: NSColor(red: 0.97, green: 0.59, blue: 0.75, alpha: 1.0),     // #f55bcf (keywords)
               symbolColour: NSColor(red: 0.98, green: 0.98, blue: 0.98, alpha: 1.0),      // #f8f8f2 (regular text)
-              typeColour: NSColor(red: 0.57, green: 0.93, blue: 0.96, alpha: 1.0),        // #8be9fd (inline code)
-              fieldColour: NSColor(red: 0.97, green: 0.59, blue: 0.75, alpha: 1.0),       // #f55bcf (emphasis/italic)
-              caseColour: NSColor(red: 0.94, green: 0.80, blue: 0.55, alpha: 1.0),        // #f1d656 (alternates)
+              typeColour: NSColor(red: 0.57, green: 0.93, blue: 0.96, alpha: 1.0),        // #8be9fd (types)
+              fieldColour: NSColor(red: 0.97, green: 0.59, blue: 0.75, alpha: 1.0),       // #f55bcf (fields)
+              caseColour: NSColor(red: 0.97, green: 0.59, blue: 0.75, alpha: 1.0),        // #f55bcf (alternates)
               backgroundColour: NSColor(red: 0.07, green: 0.08, blue: 0.11, alpha: 1.0),  // #13141c
               currentLineColour: NSColor(red: 0.14, green: 0.15, blue: 0.20, alpha: 1.0), // #24262e
               selectionColour: NSColor(red: 0.25, green: 0.27, blue: 0.37, alpha: 1.0),   // #40425f
