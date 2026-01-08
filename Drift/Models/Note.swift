@@ -28,8 +28,27 @@ final class Note {
     
     // Computed properties
     var preview: String {
-        let stripped = content.replacingOccurrences(of: #"[#*_`~\[\]()]"#, with: "", options: .regularExpression)
-        return String(stripped.prefix(150))
+        let lines = content.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+        var startIndex = 0
+        
+        // Find the first non-empty, non-heading line (or skip heading if it exists)
+        var foundHeading = false
+        for (index, line) in lines.enumerated() {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix("#") {
+                foundHeading = true
+            } else if !trimmed.isEmpty {
+                startIndex = index
+                break
+            }
+        }
+        
+        // Get text from starting position, first 60 characters, replacing newlines with spaces
+        let previewText = lines[startIndex...].joined(separator: " ")
+        let stripped = previewText.replacingOccurrences(of: #"[#*_`~\[\]()]"#, with: "", options: .regularExpression)
+        let cleaned = stripped.trimmingCharacters(in: .whitespaces)
+        
+        return String(cleaned.prefix(60))
     }
     
     var wordCount: Int {
