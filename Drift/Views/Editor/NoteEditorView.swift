@@ -8,7 +8,6 @@
 import SwiftUI
 import SwiftData
 import AppKit
-import CodeEditorView
 
 enum EditorMode: String, CaseIterable {
     case Edit
@@ -33,7 +32,6 @@ struct NoteEditorView: View {
     @State private var showingInspector = false
     @State private var selectedRange: NSRange?
     @State private var originalContent: String = ""
-    @State private var editorPosition: CodeEditor.Position = .init()
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isContentFocused: Bool
     
@@ -183,9 +181,10 @@ struct NoteEditorView: View {
     }
     
     private var editorView: some View {
-        CodeEditor(text: $note.content, position: $editorPosition)
-            .environment(\.codeEditorTheme, draculaTheme)
+        TextEditor(text: $note.content)
+            .font(.system(size: 15, design: .monospaced))
             .focused($isContentFocused)
+            .foregroundColor(.white)
             .onChange(of: note.content) { oldValue, newValue in
                 // Only update if content actually changed from original
                 if originalContent.isEmpty {
@@ -202,7 +201,7 @@ struct NoteEditorView: View {
             }
     }
     
-    // Custom Dracula dark theme
+    // Dracula dark theme colors
     private var draculaTheme: Theme {
         Theme.defaultDark
     }
