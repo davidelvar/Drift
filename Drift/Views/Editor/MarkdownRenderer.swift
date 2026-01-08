@@ -8,8 +8,8 @@
 import SwiftUI
 import MarkdownUI
 
-// MARK: - Dracula Theme Colors
-struct DraculaColors {
+// MARK: - Drift Dark Theme Colors
+struct DriftDarkColors {
     static let background = Color(red: 0.0745, green: 0.0784, blue: 0.1098)      // #13141C
     static let foreground = Color(red: 0.973, green: 0.973, blue: 0.949)         // #f8f8f2
     static let cyan = Color(red: 0.545, green: 0.918, blue: 0.996)               // #8be9fd
@@ -22,51 +22,51 @@ struct DraculaColors {
     static let codeBackground = Color(red: 0.11, green: 0.12, blue: 0.16)        // darker background for code
 }
 
-// MARK: - Custom Dracula GitHub Theme
+// MARK: - Custom Drift Dark Theme
 extension Theme {
-    static let draculaGitHub = Theme()
+    static let driftDark = Theme()
         // Headings
         .heading1 { configuration in
             configuration.label
                 .font(.system(size: 28, weight: .bold))
-                .foregroundColor(DraculaColors.cyan)
+                .foregroundColor(DriftDarkColors.cyan)
                 .markdownMargin(top: 24, bottom: 16)
         }
         .heading2 { configuration in
             configuration.label
                 .font(.system(size: 24, weight: .bold))
-                .foregroundColor(DraculaColors.cyan)
+                .foregroundColor(DriftDarkColors.cyan)
                 .markdownMargin(top: 20, bottom: 12)
         }
         .heading3 { configuration in
             configuration.label
                 .font(.system(size: 20, weight: .bold))
-                .foregroundColor(DraculaColors.cyan)
+                .foregroundColor(DriftDarkColors.cyan)
                 .markdownMargin(top: 16, bottom: 10)
         }
         .heading4 { configuration in
             configuration.label
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(DraculaColors.cyan)
+                .foregroundColor(DriftDarkColors.cyan)
                 .markdownMargin(top: 12, bottom: 8)
         }
         .heading5 { configuration in
             configuration.label
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(DraculaColors.cyan)
+                .foregroundColor(DriftDarkColors.cyan)
                 .markdownMargin(top: 10, bottom: 6)
         }
         .heading6 { configuration in
             configuration.label
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(DraculaColors.cyan)
+                .foregroundColor(DriftDarkColors.cyan)
                 .markdownMargin(top: 8, bottom: 4)
         }
         // Paragraph
         .paragraph { configuration in
             configuration.label
                 .font(.system(size: 16))
-                .foregroundColor(DraculaColors.foreground)
+                .foregroundColor(DriftDarkColors.foreground)
                 .markdownMargin(top: 0, bottom: 12)
                 .lineSpacing(3)
         }
@@ -74,35 +74,35 @@ extension Theme {
         .code {
             FontFamilyVariant(.monospaced)
             FontSize(.em(0.9))
-            ForegroundColor(DraculaColors.cyan)
-            BackgroundColor(DraculaColors.codeBackground)
+            ForegroundColor(DriftDarkColors.cyan)
+            BackgroundColor(DriftDarkColors.codeBackground)
         }
         // Code blocks
         .codeBlock { configuration in
             configuration.label
                 .relativeLineSpacing(.em(0.225))
                 .padding(12)
-                .background(DraculaColors.codeBackground)
+                .background(DriftDarkColors.codeBackground)
                 .cornerRadius(6)
                 .markdownMargin(top: 0, bottom: 16)
         }
         // Links
         .link {
-            ForegroundColor(DraculaColors.cyan)
+            ForegroundColor(DriftDarkColors.cyan)
         }
         // Strong (bold)
         .strong {
             FontWeight(.bold)
-            ForegroundColor(DraculaColors.magenta)
+            ForegroundColor(DriftDarkColors.magenta)
         }
         // Emphasis (italic)
         .emphasis {
             FontWeight(.semibold)
-            ForegroundColor(DraculaColors.orange)
+            ForegroundColor(DriftDarkColors.orange)
         }
         // Strikethrough
         .strikethrough {
-            ForegroundColor(DraculaColors.red)
+            ForegroundColor(DriftDarkColors.red)
         }
         // Blockquotes
         .blockquote { configuration in
@@ -111,7 +111,7 @@ extension Theme {
                 .padding(.horizontal, 12)
                 .overlay(alignment: .leading) {
                     Rectangle()
-                        .fill(DraculaColors.gray)
+                        .fill(DriftDarkColors.gray)
                         .frame(width: 4)
                 }
                 .background(Color(red: 0.15, green: 0.16, blue: 0.22))
@@ -120,14 +120,14 @@ extension Theme {
         // List items
         .listItem { configuration in
             configuration.label
-                .foregroundColor(DraculaColors.foreground)
+                .foregroundColor(DriftDarkColors.foreground)
                 .markdownMargin(top: 0, bottom: 8)
         }
         // Thematic break (horizontal rule)
         .thematicBreak {
             Divider()
                 .frame(height: 1)
-                .background(DraculaColors.gray)
+                .background(DriftDarkColors.gray)
         }
 }
 
@@ -138,11 +138,11 @@ struct MarkdownView: View {
     var body: some View {
         ScrollView {
             Markdown(content)
-                .markdownTheme(.draculaGitHub)
+                .markdownTheme(.driftDark)
                 .padding(24)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(DraculaColors.background)
+        .background(DriftDarkColors.background)
     }
 }
 
