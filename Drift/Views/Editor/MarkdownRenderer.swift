@@ -109,7 +109,11 @@ extension Theme {
             configuration.label
                 .padding(.vertical, 8)
                 .padding(.horizontal, 12)
-                .borderLeading(width: 4, color: DraculaColors.gray)
+                .overlay(alignment: .leading) {
+                    Rectangle()
+                        .fill(DraculaColors.gray)
+                        .frame(width: 4)
+                }
                 .background(Color(red: 0.15, green: 0.16, blue: 0.22))
                 .markdownMargin(top: 0, bottom: 16)
         }
@@ -120,13 +124,13 @@ extension Theme {
                 .markdownMargin(top: 0, bottom: 8)
         }
         // Bulleted list markers
-        .bulletedListMarker { configuration in
-            configuration.label
+        .bulletedListMarker { marker in
+            Text(marker)
                 .foregroundColor(DraculaColors.magenta)
         }
         // Numbered list markers
-        .numberedListMarker { configuration in
-            configuration.label
+        .numberedListMarker { marker in
+            Text(marker)
                 .foregroundColor(DraculaColors.magenta)
         }
         // Thematic break (horizontal rule)
