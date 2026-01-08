@@ -177,8 +177,7 @@ struct NoteEditorView: View {
     }
     
     private var editorView: some View {
-        TextEditor(text: $note.content)
-            .font(.custom(editorFont, size: 15))
+        SyntaxHighlightedEditor(text: $note.content, font: editorFont, fontSize: 15)
             .scrollContentBackground(.hidden)
             .focused($isContentFocused)
             .padding(.horizontal, 20)
