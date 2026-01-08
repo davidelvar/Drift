@@ -111,6 +111,7 @@ struct NoteEditorView: View {
                         
                     case .Preview:
                         MarkdownView(content: note.content)
+                            .padding(.leading, 16)
                         
                     case .Split:
                         GeometryReader { geometry in
@@ -122,6 +123,7 @@ struct NoteEditorView: View {
                                 
                                 MarkdownView(content: note.content)
                                     .frame(width: geometry.size.width / 2)
+                                    .padding(.leading, 16)
                             }
                         }	
                     }

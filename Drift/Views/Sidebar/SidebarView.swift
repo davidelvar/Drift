@@ -97,6 +97,7 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
+        .scrollContentBackground(.hidden)
         .frame(minWidth: 200)
         .safeAreaInset(edge: .top) {
             HStack(spacing: 6) {
@@ -149,34 +150,6 @@ struct SidebarView: View {
         
         for folder in Folder.createDefaultFolders() {
             modelContext.insert(folder)
-        }
-    }
-}
-
-// MARK: - Sidebar Row
-struct SidebarRow: View {
-    let item: SidebarItem
-    var count: Int = 0
-    
-    var body: some View {
-        HStack {
-            Label {
-                Text(item.title)
-            } icon: {
-                Image(systemName: item.icon)
-                    .foregroundStyle(item.color)
-            }
-            
-            Spacer()
-            
-            if count > 0 {
-                Text("\(count)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(.quaternary, in: Capsule())
-            }
         }
     }
 }
