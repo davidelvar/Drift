@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 import AppKit
+import CodeEditorView
 
 enum EditorMode: String, CaseIterable {
     case Edit
@@ -32,6 +33,8 @@ struct NoteEditorView: View {
     @State private var showingInspector = false
     @State private var selectedRange: NSRange?
     @State private var originalContent: String = ""
+    @State private var editorPosition: CodeEditor.Position = CodeEditor.Position()
+    @State private var editorMessages: Set<Any> = Set()
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isContentFocused: Bool
     
@@ -181,10 +184,9 @@ struct NoteEditorView: View {
     }
     
     private var editorView: some View {
-        TextEditor(text: $note.content)
-            .font(.system(size: 15, design: .monospaced))
+        CodeEditor(text: $note.content, position: $editorPosition, messages: $editorMessages)
+            .environment(\.codeEditorTheme, Theme.defaultDark)
             .focused($isContentFocused)
-            .foregroundColor(.white)
             .onChange(of: note.content) { oldValue, newValue in
                 // Only update if content actually changed from original
                 if originalContent.isEmpty {
