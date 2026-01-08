@@ -31,6 +31,7 @@ struct NoteEditorView: View {
     
     @State private var showingInspector = false
     @State private var selectedRange: NSRange?
+    @State private var originalContent: String = ""
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isContentFocused: Bool
     
@@ -181,10 +182,19 @@ struct NoteEditorView: View {
             .focused($isContentFocused)
             .padding(.horizontal, 20)
             .padding(.vertical, 16)
-            .onChange(of: note.content) { _, _ in
-                note.updatedAt = Date()
-                // Update note title to match the extracted heading
-                note.title = note.extractedTitle
+            .onChange(of: note.content) { oldValue, newValue in
+                // Only update if content actually changed from original
+                if originalContent.isEmpty {
+                    originalContent = oldValue
+                }
+                if newValue != originalContent {
+                    note.updatedAt = Date()
+                    note.title = note.extractedTitle
+                }
+            }
+            .onAppear {
+                // Store original content when note loads
+                originalContent = note.content
             }
     }
     
