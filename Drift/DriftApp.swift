@@ -172,8 +172,6 @@ struct SettingsView: View {
             
             Form {
                 Section("Display") {
-                    Toggle("Show Line Numbers", isOn: $showLineNumbers)
-                    Toggle("Highlight Selected Line", isOn: $highlightSelectedLine)
                     Toggle("Wrap Lines", isOn: $wrapLines)
                 }
                 

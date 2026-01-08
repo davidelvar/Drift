@@ -699,6 +699,11 @@ struct STTextViewRepresentable: NSViewRepresentable {
         textView.isAutomaticQuoteSubstitutionEnabled = smartQuotes
         textView.isAutomaticDashSubstitutionEnabled = smartDashes
         
+        // Update font if needed
+        if let font = font {
+            textView.font = font
+        }
+        
         let paragraphStyle = NSParagraphStyle.default.mutableCopy() as! NSMutableParagraphStyle
         paragraphStyle.lineHeightMultiple = lineHeightMultiple
         paragraphStyle.defaultTabInterval = CGFloat(tabWidth * 8)
