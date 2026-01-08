@@ -167,7 +167,7 @@ struct NoteEditorView: View {
                 .help(note.isPinned ? "Remove from Favorites" : "Add to Favorites")
                 
                 Button(action: { showingInspector.toggle() }) {
-                    Image(systemName: "info.circle")
+                    Image("circle-info")
                 }
                 .help("Note Info")
                 
