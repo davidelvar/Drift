@@ -281,7 +281,7 @@ struct NoteRowView: View {
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 8)
         .onHover { hovering in
             isHovering = hovering
         }
