@@ -152,17 +152,8 @@ struct MarkdownView: View {
                 .font(.system(size: 15))
                 .lineSpacing(4)
             
-        case .codeBlock(_, let code):
-            Text(code)
-                .font(.system(size: 13, design: .monospaced))
-                .padding(12)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(nsColor: .windowBackgroundColor))
-                .cornerRadius(8)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
-                )
+        case .codeBlock(let language, let code):
+            syntaxHighlightedCode(code, language: language)
             
         case .blockquote(let text):
             HStack(alignment: .top, spacing: 12) {
@@ -219,6 +210,241 @@ struct MarkdownView: View {
             .font(font)
             .padding(.top, level <= 2 ? 12 : 6)
             .padding(.bottom, level <= 2 ? 4 : 2)
+    }
+    
+    // MARK: - Syntax Highlighting for Code Blocks
+    @ViewBuilder
+    private func syntaxHighlightedCode(_ code: String, language: String?) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let language = language, !language.isEmpty {
+                Text(language.lowercased())
+                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(nsColor: .separatorColor).opacity(0.5))
+            }
+            
+            ScrollView(.horizontal) {
+                syntaxHighlightedText(code, language: language)
+                    .font(.system(size: 13, design: .monospaced))
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .background(Color(nsColor: .windowBackgroundColor))
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
+        )
+    }
+    
+    private func syntaxHighlightedText(_ code: String, language: String?) -> Text {
+        let lang = language?.lowercased() ?? ""
+        
+        switch lang {
+        case "swift":
+            return highlightSwift(code)
+        case "python":
+            return highlightPython(code)
+        case "javascript", "js":
+            return highlightJavaScript(code)
+        case "json":
+            return highlightJSON(code)
+        case "html", "xml":
+            return highlightHTML(code)
+        default:
+            return Text(code).foregroundStyle(.primary)
+        }
+    }
+    
+    private func highlightSwift(_ code: String) -> Text {
+        let keywords = ["let", "var", "func", "class", "struct", "enum", "protocol", "extension", "if", "else", "for", "while", "return", "import", "mutating", "async", "await"]
+        let types = ["String", "Int", "Double", "Bool", "Array", "Dictionary", "Set", "Optional", "View", "State", "Binding", "AppStorage"]
+        
+        return highlightCode(code, keywords: keywords, types: types, stringColor: Color(nsColor: .systemRed), keywordColor: Color(nsColor: .systemOrange), typeColor: Color(nsColor: .systemBlue), commentColor: Color.gray)
+    }
+    
+    private func highlightPython(_ code: String) -> Text {
+        let keywords = ["def", "class", "if", "else", "elif", "for", "while", "return", "import", "from", "as", "True", "False", "None", "and", "or", "not", "in", "is"]
+        let types = ["str", "int", "float", "bool", "list", "dict", "set", "tuple"]
+        
+        return highlightCode(code, keywords: keywords, types: types, stringColor: Color(nsColor: .systemGreen), keywordColor: Color(nsColor: .systemOrange), typeColor: Color(nsColor: .systemBlue), commentColor: Color.gray)
+    }
+    
+    private func highlightJavaScript(_ code: String) -> Text {
+        let keywords = ["function", "const", "let", "var", "if", "else", "for", "while", "return", "import", "export", "async", "await", "class", "extends", "new", "this", "super"]
+        let types = ["String", "Number", "Boolean", "Array", "Object", "Promise"]
+        
+        return highlightCode(code, keywords: keywords, types: types, stringColor: Color(nsColor: .systemGreen), keywordColor: Color(nsColor: .systemRed), typeColor: Color(nsColor: .systemBlue), commentColor: Color.gray)
+    }
+    
+    private func highlightJSON(_ code: String) -> Text {
+        var result = Text("")
+        var i = 0
+        let chars = Array(code)
+        
+        while i < chars.count {
+            if chars[i] == "\"" {
+                if let endQuote = findCharacter(chars: chars, start: i + 1, char: "\"") {
+                    let stringContent = String(chars[i...endQuote])
+                    result = result + Text(stringContent).foregroundStyle(Color(nsColor: .systemGreen))
+                    i = endQuote + 1
+                    continue
+                }
+            }
+            
+            if chars[i] == "#" {
+                let comment = String(chars[i...].prefix { $0 != "\n" })
+                result = result + Text(comment).foregroundStyle(Color.gray)
+                i += comment.count
+                continue
+            }
+            
+            let char = String(chars[i])
+            if "{}[]:,".contains(char) {
+                result = result + Text(char).foregroundStyle(Color(nsColor: .systemPurple))
+            } else {
+                result = result + Text(char).foregroundStyle(.primary)
+            }
+            
+            i += 1
+        }
+        
+        return result
+    }
+    
+    private func highlightHTML(_ code: String) -> Text {
+        var result = Text("")
+        var i = 0
+        let chars = Array(code)
+        
+        while i < chars.count {
+            if chars[i] == "<" {
+                if let endTag = findCharacter(chars: chars, start: i + 1, char: ">") {
+                    let tag = String(chars[i...endTag])
+                    result = result + Text(tag).foregroundStyle(Color(nsColor: .systemRed))
+                    i = endTag + 1
+                    continue
+                }
+            }
+            
+            if chars[i] == "\"" {
+                if let endQuote = findCharacter(chars: chars, start: i + 1, char: "\"") {
+                    let stringContent = String(chars[i...endQuote])
+                    result = result + Text(stringContent).foregroundStyle(Color(nsColor: .systemGreen))
+                    i = endQuote + 1
+                    continue
+                }
+            }
+            
+            let char = String(chars[i])
+            result = result + Text(char).foregroundStyle(.primary)
+            i += 1
+        }
+        
+        return result
+    }
+    
+    private func highlightCode(code: String, keywords: [String], types: [String], stringColor: Color, keywordColor: Color, typeColor: Color, commentColor: Color) -> Text {
+        var result = Text("")
+        var i = 0
+        let chars = Array(code)
+        
+        while i < chars.count {
+            // Skip whitespace
+            if chars[i].isWhitespace {
+                result = result + Text(String(chars[i]))
+                i += 1
+                continue
+            }
+            
+            // Comments
+            if i + 1 < chars.count && chars[i] == "/" && chars[i + 1] == "/" {
+                let comment = String(chars[i...].prefix { $0 != "\n" })
+                result = result + Text(comment).foregroundStyle(commentColor)
+                i += comment.count
+                continue
+            }
+            
+            // Multi-line comments
+            if i + 1 < chars.count && chars[i] == "/" && chars[i + 1] == "*" {
+                if let endIdx = findSubstring(chars: chars, start: i + 2, substring: "*/") {
+                    let comment = String(chars[i...(endIdx + 1)])
+                    result = result + Text(comment).foregroundStyle(commentColor)
+                    i = endIdx + 2
+                    continue
+                }
+            }
+            
+            // Strings
+            if chars[i] == "\"" || chars[i] == "'" || chars[i] == "`" {
+                let quote = chars[i]
+                if let endIdx = findCharacter(chars: chars, start: i + 1, char: quote) {
+                    let stringContent = String(chars[i...endIdx])
+                    result = result + Text(stringContent).foregroundStyle(stringColor)
+                    i = endIdx + 1
+                    continue
+                }
+            }
+            
+            // Keywords and identifiers
+            if chars[i].isLetter || chars[i] == "_" {
+                var word = ""
+                var j = i
+                while j < chars.count && (chars[j].isLetter || chars[j].isNumber || chars[j] == "_") {
+                    word.append(chars[j])
+                    j += 1
+                }
+                
+                if keywords.contains(word) {
+                    result = result + Text(word).foregroundStyle(keywordColor)
+                } else if types.contains(word) {
+                    result = result + Text(word).foregroundStyle(typeColor)
+                } else {
+                    result = result + Text(word)
+                }
+                
+                i = j
+                continue
+            }
+            
+            // Numbers
+            if chars[i].isNumber {
+                var number = ""
+                var j = i
+                while j < chars.count && (chars[j].isNumber || chars[j] == ".") {
+                    number.append(chars[j])
+                    j += 1
+                }
+                result = result + Text(number).foregroundStyle(Color(nsColor: .systemCyan))
+                i = j
+                continue
+            }
+            
+            // Operators and punctuation
+            let char = String(chars[i])
+            if "{}[]().,;:+-*/<>=!&|?~".contains(char) {
+                result = result + Text(char).foregroundStyle(Color(nsColor: .systemPurple))
+            } else {
+                result = result + Text(char)
+            }
+            
+            i += 1
+        }
+        
+        return result
+    }
+    
+    private func findSubstring(chars: [Character], start: Int, substring: String) -> Int? {
+        let subChars = Array(substring)
+        for i in start...(chars.count - subChars.count) {
+            if chars[i..<(i + subChars.count)].elementsEqual(subChars) {
+                return i
+            }
+        }
+        return nil
     }
     
     // MARK: - Styled Text with Inline Markdown
