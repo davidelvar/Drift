@@ -135,7 +135,7 @@ struct NoteEditorView: View {
                 }
             }
         }
-        .background(Color(red: 0.157, green: 0.165, blue: 0.212))
+        .background(Color(red: 0.1256, green: 0.132, blue: 0.1696))
         .frame(minWidth: 500)
         .toolbar {
             ToolbarItemGroup {
