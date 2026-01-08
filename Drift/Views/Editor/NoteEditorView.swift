@@ -34,7 +34,6 @@ struct NoteEditorView: View {
     @State private var selectedRange: NSRange?
     @State private var originalContent: String = ""
     @State private var editorPosition: CodeEditor.Position = .init()
-    @State private var editorMessages = Set<Int>()
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isContentFocused: Bool
     
@@ -184,7 +183,7 @@ struct NoteEditorView: View {
     }
     
     private var editorView: some View {
-        CodeEditor(text: $note.content, position: $editorPosition, messages: $editorMessages)
+        CodeEditor(text: $note.content, position: $editorPosition)
             .environment(\.codeEditorTheme, draculaTheme)
             .focused($isContentFocused)
             .onChange(of: note.content) { oldValue, newValue in
