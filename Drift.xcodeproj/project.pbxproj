@@ -10,8 +10,7 @@
 		5D7784C72F0F7A7C008EF015 /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = 5DC585EC2F0F76AD0050AC0B /* Markdown */; };
 		5D7784C82F0F7A7C008EF015 /* Splash in Frameworks */ = {isa = PBXBuildFile; productRef = 5DC585ED2F0F76B00050AC0B /* Splash */; };
 		5D7784FC2F0FA64C008EF015 /* CodeEditorView in Frameworks */ = {isa = PBXBuildFile; productRef = 5D7784FB2F0FA64C008EF015 /* CodeEditorView */; };
-		5D7784FE2F0FA64C008EF015 /* LanguageSupport in Frameworks */ = {isa = PBXBuildFile; productRef = 5D7784FD2F0FA64C008EF015 /* LanguageSupport */; };
-/* End PBXBuildFile section */
+		5D7784FE2F0FA64C008EF015 /* LanguageSupport in Frameworks */ = {isa = PBXBuildFile; productRef = 5D7784FD2F0FA64C008EF015 /* LanguageSupport */; };	8C8FF1A7AF5F40E0B9C5073D /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 8C8FF1A7AF5F40E0B9C5073C /* MarkdownUI */; };/* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
 		6378F0F62F0F0D0800677FA7 /* PBXContainerItemProxy */ = {
@@ -62,8 +61,7 @@
 				5D7784FE2F0FA64C008EF015 /* LanguageSupport in Frameworks */,
 				5D7784FC2F0FA64C008EF015 /* CodeEditorView in Frameworks */,
 				5D7784C82F0F7A7C008EF015 /* Splash in Frameworks */,
-				5D7784C72F0F7A7C008EF015 /* Markdown in Frameworks */,
-			);
+				5D7784C72F0F7A7C008EF015 /* Markdown in Frameworks */,			8C8FF1A7AF5F40E0B9C5073D /* MarkdownUI in Frameworks */,			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		6378F0F22F0F0D0800677FA7 /* Frameworks */ = {
@@ -127,6 +125,7 @@
 				5DC585ED2F0F76B00050AC0B /* Splash */,
 				5D7784FB2F0FA64C008EF015 /* CodeEditorView */,
 				5D7784FD2F0FA64C008EF015 /* LanguageSupport */,
+				8C8FF1A7AF5F40E0B9C5073C /* MarkdownUI */,
 			);
 			productName = Drift;
 			productReference = 6378F0E82F0F0D0700677FA7 /* Drift.app */;
@@ -650,6 +649,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 5DC585EA2F0F55600050AC0B /* XCRemoteSwiftPackageReference "Splash" */;
 			productName = Splash;
+		};
+		8C8FF1A7AF5F40E0B9C5073C /* MarkdownUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D7784FF2F0FADA1008EF015 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
+			productName = MarkdownUI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
