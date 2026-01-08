@@ -642,6 +642,11 @@ struct STTextViewRepresentable: NSViewRepresentable {
         textView.isVerticallyResizable = true
         textView.textContainer?.widthTracksTextView = wrapLines
         
+        // Apply initial markdown syntax highlighting
+        if let storage = textView.textStorage {
+            MarkdownHighlighter.highlight(text, in: storage)
+        }
+        
         return scrollView
     }
     
@@ -654,6 +659,10 @@ struct STTextViewRepresentable: NSViewRepresentable {
         if textView.string != text {
             let cursorPosition = textView.selectedRange.location
             textView.string = text
+            // Apply markdown syntax highlighting
+            if let storage = textView.textStorage {
+                MarkdownHighlighter.highlight(text, in: storage)
+            }
             // Restore cursor position if still valid
             if cursorPosition <= text.count {
                 textView.setSelectedRange(NSRange(location: cursorPosition, length: 0))
@@ -689,6 +698,11 @@ struct STTextViewRepresentable: NSViewRepresentable {
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
             self.text = textView.string
+            
+            // Apply markdown syntax highlighting
+            if let storage = textView.textStorage {
+                MarkdownHighlighter.highlight(textView.string, in: storage)
+            }
         }
         
         // Support smart markdown formatting
