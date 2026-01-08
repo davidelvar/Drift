@@ -111,6 +111,34 @@ struct NoteEditorView: View {
             
             Divider()
             
+            // Button group above editor (top right)
+            HStack {
+                Spacer()
+                
+                Button(action: { appState.toggleFocusMode() }) {
+                    Image(systemName: "rectangle.dashed")
+                }
+                .help("Focus Mode (⌘⇧F)")
+                
+                Button(action: { note.togglePin() }) {
+                    Image(systemName: note.isPinned ? "star.fill" : "star")
+                        .foregroundStyle(note.isPinned ? .yellow : .secondary)
+                }
+                .help(note.isPinned ? "Remove from Favorites" : "Add to Favorites")
+                
+                Button(action: { showingInspector.toggle() }) {
+                    Image(systemName: "info.circle")
+                }
+                .help("Note Info")
+                
+                ShareLink(item: note.content) {
+                    Image(systemName: "square.and.arrow.up")
+                }
+                .help("Share")
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 8)
+            
             // Content area based on mode
             Group {
                 switch appState.editorMode {
@@ -138,27 +166,20 @@ struct NoteEditorView: View {
         .background(Color(red: 0.1137, green: 0.1176, blue: 0.1569))
         .frame(minWidth: 500)
         .toolbar {
-            ToolbarItemGroup {
-                Button(action: { appState.toggleFocusMode() }) {
-                    Image(systemName: "rectangle.dashed")
-                }
-                .help("Focus Mode (⌘⇧F)")
+            ToolbarItemGroup(placement: .principal) {
+                Spacer()
                 
-                Button(action: { note.togglePin() }) {
-                    Image(systemName: note.isPinned ? "star.fill" : "star")
-                        .foregroundStyle(note.isPinned ? .yellow : .secondary)
+                Picker("Mode", selection: $appState.editorMode) {
+                    ForEach(EditorMode.allCases, id: \.self) { mode in
+                        Label(mode.rawValue, systemImage: mode.icon)
+                            .tag(mode)
+                    }
                 }
-                .help(note.isPinned ? "Remove from Favorites" : "Add to Favorites")
-                
-                Button(action: { showingInspector.toggle() }) {
-                    Image(systemName: "info.circle")
-                }
-                .help("Note Info")
-                
-                ShareLink(item: note.content) {
-                    Image(systemName: "square.and.arrow.up")
-                }
-                .help("Share")
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 180)
+            }
+        }
             }
         }
         .inspector(isPresented: $showingInspector) {
