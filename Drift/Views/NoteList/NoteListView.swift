@@ -85,11 +85,18 @@ struct NoteListView: View {
                         .contextMenu {
                             noteContextMenu(for: note)
                         }
+                        .listRowBackground(
+                            AppState.isNoteSelected(note: note, selectedNote: appState.selectedNote) ?
+                            Color.black.opacity(0.2) : Color(red: 0.157, green: 0.165, blue: 0.212)
+                        )
                 }
                 .listStyle(.inset)
+                .scrollContentBackground(.hidden)
+                .background(Color(red: 0.157, green: 0.165, blue: 0.212))
                 .id(sortOrder)  // Force list refresh when sort order changes
             }
         }
+        .background(Color(red: 0.157, green: 0.165, blue: 0.212))
         .frame(minWidth: 250, idealWidth: 300)
         .toolbar {
             ToolbarItem {

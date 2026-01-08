@@ -32,6 +32,11 @@ final class AppState {
             isFocusMode.toggle()
         }
     }
+    
+    static func isNoteSelected(note: Note, selectedNote: Note?) -> Bool {
+        guard let selectedNote = selectedNote else { return false }
+        return note.id == selectedNote.id
+    }
 }
 
 // MARK: - Sidebar Items
