@@ -184,7 +184,7 @@ struct NoteEditorView: View {
     }
     
     private var editorView: some View {
-        CodeEditor(text: $note.content, position: $editorPosition, messages: .constant(Set()), language: .none)
+        CodeEditor(text: $note.content, position: $editorPosition, messages: .constant(Set()), language: .markdown())
             .environment(\.codeEditorTheme, draculaTheme)
             .focused($isContentFocused)
             .onChange(of: note.content) { oldValue, newValue in
