@@ -100,9 +100,10 @@ struct SidebarView: View {
         .frame(minWidth: 200)
         .safeAreaInset(edge: .top) {
             HStack(spacing: 6) {
-                Image(systemName: "wind")
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(.blue)
+                Image("DriftLogo")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 18, height: 18)
                 Text("Drift")
                     .font(.system(size: 15, weight: .semibold))
             }
