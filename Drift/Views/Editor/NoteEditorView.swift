@@ -65,13 +65,6 @@ struct NoteEditorView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Title from heading
-            Text(extractedTitle)
-                .font(.system(size: 28, weight: .bold))
-                .padding(.horizontal, 24)
-                .padding(.top, 20)
-                .padding(.bottom, 8)
-            
             // Metadata bar with mode picker on left
             HStack(spacing: 16) {
                 // Editor mode picker - moved to LEFT
