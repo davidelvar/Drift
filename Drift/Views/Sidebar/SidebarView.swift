@@ -66,31 +66,8 @@ struct SidebarView: View {
             // User Folders Section
             Section("Folders") {
                 ForEach(folders) { folder in
-                    FolderRow(
-                        folder: folder,
-                        count: folderCount(folder),
-                        isRenaming: renamingFolderId == folder.id,
-                        renamingName: $renamingFolderName,
-                        onDoubleClick: {
-                            renamingFolderId = folder.id.uuidString
-                            renamingFolderName = folder.name
-                        },
-                        onRename: {
-                            renameFolder(folder)
-                        },
-                        onRenameCancel: {
-                            renamingFolderId = nil
-                            renamingFolderName = ""
-                        },
-                        onDelete: {
-                            deleteFolder(folder)
-                        },
-                        onContextMenuRename: {
-                            renamingFolderId = folder.id.uuidString
-                            renamingFolderName = folder.name
-                        }
-                    )
-                    .tag(SidebarItem.folder(folder))
+                    makeFolderRow(for: folder)
+                        .tag(SidebarItem.folder(folder))
                 }
                 
                 if isAddingFolder {
@@ -175,6 +152,33 @@ struct SidebarView: View {
         modelContext.delete(folder)
     }
     
+    private func makeFolderRow(for folder: Folder) -> some View {
+        FolderRow(
+            folder: folder,
+            count: folderCount(folder),
+            isRenaming: renamingFolderId == folder.id,
+            renamingName: $renamingFolderName,
+            onDoubleClick: {
+                renamingFolderId = folder.id.uuidString
+                renamingFolderName = folder.name
+            },
+            onRename: {
+                renameFolder(folder)
+            },
+            onRenameCancel: {
+                renamingFolderId = nil
+                renamingFolderName = ""
+            },
+            onDelete: {
+                deleteFolder(folder)
+            },
+            onContextMenuRename: {
+                renamingFolderId = folder.id.uuidString
+                renamingFolderName = folder.name
+            }
+        )
+    }
+    
     private func createDefaultFoldersIfNeeded() {
         guard folders.isEmpty else { return }
         
@@ -204,9 +208,7 @@ struct FolderRow: View {
                 .onExitCommand(onRenameCancel)
         } else {
             SidebarRow(item: .folder(folder), count: count)
-                .onDoubleClick {
-                    onDoubleClick()
-                }
+                .onDoubleClick(perform: onDoubleClick)
                 .contextMenu {
                     Button("Rename", systemImage: "pencil") {
                         onContextMenuRename()
