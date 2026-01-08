@@ -130,35 +130,31 @@ struct NoteEditorView: View {
             .font(.system(size: 14))
             
             // Content area based on mode
-            Group {
-                switch appState.editorMode {
-                case .Edit:
-                    editorView
-                    
-                case .Preview:
-                    MarkdownView(content: note.content)
-                    
-                case .Split:
-                    GeometryReader { geometry in
-                        HStack(spacing: 0) {
-                            editorView
-                                .frame(width: geometry.size.width / 2)
-                            
-                            Divider()
-                            
-                            MarkdownView(content: note.content)
-                                .frame(width: geometry.size.width / 2)
+            ZStack(alignment: .bottomTrailing) {
+                Group {
+                    switch appState.editorMode {
+                    case .Edit:
+                        editorView
+                        
+                    case .Preview:
+                        MarkdownView(content: note.content)
+                        
+                    case .Split:
+                        GeometryReader { geometry in
+                            HStack(spacing: 0) {
+                                editorView
+                                    .frame(width: geometry.size.width / 2)
+                                
+                                Divider()
+                                
+                                MarkdownView(content: note.content)
+                                    .frame(width: geometry.size.width / 2)
+                            }
                         }
                     }
                 }
-            }
-        }
-        .background(Color(red: 0.1137, green: 0.1176, blue: 0.1569))
-        .frame(minWidth: 500)
-        .toolbar {
-            ToolbarItemGroup(placement: .principal) {
-                Spacer()
                 
+                // Mode picker - bottom right with glass effect
                 Picker("Mode", selection: $appState.editorMode) {
                     ForEach(EditorMode.allCases, id: \.self) { mode in
                         Label(mode.rawValue, systemImage: mode.icon)
@@ -168,6 +164,16 @@ struct NoteEditorView: View {
                 .pickerStyle(.segmented)
                 .labelsHidden()
                 .frame(width: 180)
+                .padding(16)
+                .background(Color.black.opacity(0.2))
+                .cornerRadius(12)
+            }
+        }
+        .background(Color(red: 0.1137, green: 0.1176, blue: 0.1569))
+        .frame(minWidth: 500)
+        .toolbar {
+            ToolbarItemGroup(placement: .principal) {
+                Spacer()
             }
         }
         .inspector(isPresented: $showingInspector) {
