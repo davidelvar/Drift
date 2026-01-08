@@ -734,7 +734,6 @@ struct STTextViewRepresentable: NSViewRepresentable {
         @Binding var text: String
         weak var textView: NSTextView?
         var highlightSelectedLine: Bool = true
-        private var highlightLayer: CALayer?
         
         init(text: Binding<String>) {
             self._text = text
@@ -769,7 +768,7 @@ struct STTextViewRepresentable: NSViewRepresentable {
         }
         
         func updateLineHighlight(_ textView: NSTextView) {
-            guard let layoutManager = textView.layoutManager, let textContainer = textView.textContainer else { return }
+            guard let storage = textView.textStorage else { return }
             
             let selectedRange = textView.selectedRange
             if selectedRange.location == NSNotFound {
@@ -777,8 +776,12 @@ struct STTextViewRepresentable: NSViewRepresentable {
                 return
             }
             
+            // Clear all previous highlights
+            let fullRange = NSRange(location: 0, length: storage.length)
+            storage.removeAttribute(.backgroundColor, range: fullRange)
+            
             // Get the line range
-            let text = textView.string
+            let text = storage.string
             let nsText = text as NSString
             
             // Find line boundaries
@@ -792,26 +795,23 @@ struct STTextViewRepresentable: NSViewRepresentable {
                 lineEnd += 1
             }
             
-            // Get the line rect using layout manager
-            let glyphRange = layoutManager.glyphRange(forCharacterRange: NSRange(location: lineStart, length: lineEnd - lineStart), actualCharacterRange: nil)
-            let lineRect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
+            // Create a paragraph style with a background that extends to fill available space
+            let highlightColor = NSColor(red: 0.2, green: 0.2, blue: 0.25, alpha: 0.5)
             
-            // Create a layer for full-width highlight
-            if highlightLayer == nil {
-                highlightLayer = CALayer()
-                if let scrollView = textView.enclosingScrollView {
-                    scrollView.documentView?.layer?.addSublayer(highlightLayer!)
-                }
-            }
+            // Apply background to the entire line
+            let highlightAttributes: [NSAttributedString.Key: Any] = [
+                .backgroundColor: highlightColor
+            ]
             
-            highlightLayer?.backgroundColor = NSColor(red: 0.2, green: 0.2, blue: 0.25, alpha: 0.5).cgColor
-            highlightLayer?.frame = CGRect(x: 0, y: lineRect.origin.y, width: textView.bounds.width, height: lineRect.height)
-            highlightLayer?.zPosition = -1
+            // Apply the highlight to the line range
+            let highlightRange = NSRange(location: lineStart, length: lineEnd - lineStart)
+            storage.addAttributes(highlightAttributes, range: highlightRange)
         }
         
         func clearLineHighlight(_ textView: NSTextView) {
-            highlightLayer?.removeFromSuperlayer()
-            highlightLayer = nil
+            guard let storage = textView.textStorage else { return }
+            let range = NSRange(location: 0, length: storage.length)
+            storage.removeAttribute(.backgroundColor, range: range)
         }
         
         // Support smart markdown formatting
