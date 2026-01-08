@@ -172,7 +172,7 @@ struct NoteEditorView: View {
                 .help("Note Info")
                 
                 ShareLink(item: note.content) {
-                    Image(systemName: "square.and.arrow.up")
+                    Image("export")
                 }
                 .help("Share")
             }
