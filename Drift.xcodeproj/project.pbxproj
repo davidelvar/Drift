@@ -214,6 +214,7 @@
 				5DC585EA2F0F55600050AC0B /* XCRemoteSwiftPackageReference "Splash" */,
 				5DC585EB2F0F769C0050AC0B /* XCRemoteSwiftPackageReference "swift-markdown" */,
 				5D7784FA2F0FA64C008EF015 /* XCRemoteSwiftPackageReference "CodeEditorView" */,
+				5D7784FF2F0FADA1008EF015 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 6378F0E92F0F0D0700677FA7 /* Products */;
@@ -601,6 +602,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 0.15.4;
+			};
+		};
+		5D7784FF2F0FADA1008EF015 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.1;
 			};
 		};
 		5DC585EA2F0F55600050AC0B /* XCRemoteSwiftPackageReference "Splash" */ = {
