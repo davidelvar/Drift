@@ -44,6 +44,7 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
         textView.autoresizingMask = [.width, .height]
         textView.minSize = NSSize(width: 0, height: 0)
         textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        textView.textContainerInset = NSSize(width: 0, height: 16) // Vertical padding inside
         
         // Store textView in coordinator for later access
         context.coordinator.textView = textView
@@ -54,6 +55,14 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
         scrollView.hasHorizontalScroller = true
         scrollView.autohidesScrollers = true
         scrollView.backgroundColor = DraculaTheme.background
+        
+        // Make scrollers more discreet
+        if let verticalScroller = scrollView.verticalScroller {
+            verticalScroller.alphaValue = 0.5
+        }
+        if let horizontalScroller = scrollView.horizontalScroller {
+            horizontalScroller.alphaValue = 0.5
+        }
         
         // Apply initial highlighting
         context.coordinator.applyMarkdownHighlighting(to: textView)

@@ -180,8 +180,8 @@ struct NoteEditorView: View {
         SyntaxHighlightedEditor(text: $note.content, font: editorFont, fontSize: 15)
             .scrollContentBackground(.hidden)
             .focused($isContentFocused)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 16)
+            .padding(.horizontal, 40)
+            .padding(.vertical, 0)
             .onChange(of: note.content) { oldValue, newValue in
                 // Only update if content actually changed from original
                 if originalContent.isEmpty {
