@@ -173,6 +173,7 @@ struct SettingsView: View {
             Form {
                 Section("Display") {
                     Toggle("Wrap Lines", isOn: $wrapLines)
+                    Toggle("Highlight Selected Line", isOn: $highlightSelectedLine)
                 }
                 
                 Section("Typography") {

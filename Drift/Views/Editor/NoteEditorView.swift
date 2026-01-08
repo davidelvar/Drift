@@ -643,6 +643,10 @@ struct STTextViewRepresentable: NSViewRepresentable {
         textView.isEditable = isEditable
         textView.isSelectable = true
         
+        // Store reference to textView in coordinator for line highlighting
+        context.coordinator.textView = textView
+        context.coordinator.highlightSelectedLine = highlightSelectedLine
+        
         // Markdown-specific settings
         textView.isAutomaticSpellingCorrectionEnabled = spellCheck
         textView.isAutomaticQuoteSubstitutionEnabled = smartQuotes
@@ -712,6 +716,14 @@ struct STTextViewRepresentable: NSViewRepresentable {
         scrollView.hasHorizontalScroller = !wrapLines
         textView.isHorizontallyResizable = !wrapLines
         textView.textContainer?.widthTracksTextView = wrapLines
+        
+        // Update highlight selected line setting
+        context.coordinator.highlightSelectedLine = highlightSelectedLine
+        if highlightSelectedLine {
+            context.coordinator.updateLineHighlight(textView)
+        } else {
+            context.coordinator.clearLineHighlight(textView)
+        }
     }
     
     func makeCoordinator() -> Coordinator {
@@ -720,6 +732,8 @@ struct STTextViewRepresentable: NSViewRepresentable {
     
     class Coordinator: NSObject, NSTextViewDelegate {
         @Binding var text: String
+        weak var textView: NSTextView?
+        var highlightSelectedLine: Bool = true
         
         init(text: Binding<String>) {
             self._text = text
@@ -729,10 +743,67 @@ struct STTextViewRepresentable: NSViewRepresentable {
             guard let textView = notification.object as? NSTextView else { return }
             self.text = textView.string
             
+            // Update line highlighting
+            if highlightSelectedLine {
+                updateLineHighlight(textView)
+            } else {
+                clearLineHighlight(textView)
+            }
+            
             // Apply markdown syntax highlighting
             if let storage = textView.textStorage {
                 MarkdownHighlighter.highlight(textView.string, in: storage)
             }
+        }
+        
+        func textViewDidChangeSelection(_ notification: Notification) {
+            guard let textView = notification.object as? NSTextView else { return }
+            
+            // Update line highlighting on selection change
+            if highlightSelectedLine {
+                updateLineHighlight(textView)
+            } else {
+                clearLineHighlight(textView)
+            }
+        }
+        
+        func updateLineHighlight(_ textView: NSTextView) {
+            guard let storage = textView.textStorage else { return }
+            
+            let selectedRange = textView.selectedRange
+            if selectedRange.location == NSNotFound { return }
+            
+            // Clear previous highlights first
+            let fullRange = NSRange(location: 0, length: storage.length)
+            storage.removeAttribute(.backgroundColor, range: fullRange)
+            
+            // Get the line range for the current selection
+            let text = storage.string
+            let nsText = text as NSString
+            
+            // Find the start of the current line
+            var lineStart = selectedRange.location
+            while lineStart > 0 && nsText.character(at: lineStart - 1) != 10 { // 10 is newline
+                lineStart -= 1
+            }
+            
+            // Find the end of the current line
+            var lineEnd = selectedRange.location
+            while lineEnd < nsText.length && nsText.character(at: lineEnd) != 10 { // 10 is newline
+                lineEnd += 1
+            }
+            
+            let lineRange = NSRange(location: lineStart, length: lineEnd - lineStart)
+            
+            // Apply highlight color to the line background
+            let highlightColor = NSColor(red: 0.2, green: 0.2, blue: 0.25, alpha: 0.5)
+            storage.addAttribute(.backgroundColor, value: highlightColor, range: lineRange)
+        }
+        
+        func clearLineHighlight(_ textView: NSTextView) {
+            guard let storage = textView.textStorage else { return }
+            let range = NSRange(location: 0, length: storage.length)
+            storage.removeAttribute(.backgroundColor, range: range)
         }
         
         // Support smart markdown formatting
