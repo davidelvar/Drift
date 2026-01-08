@@ -18,6 +18,8 @@ struct SidebarView: View {
     
     @State private var isAddingFolder = false
     @State private var newFolderName = ""
+    @State private var renamingFolderId: String? = nil
+    @State private var renamingFolderName: String = ""
     
     // Computed counts
     private var allNotesCount: Int {
@@ -64,16 +66,33 @@ struct SidebarView: View {
             // User Folders Section
             Section("Folders") {
                 ForEach(folders) { folder in
-                    SidebarRow(item: .folder(folder), count: folderCount(folder))
-                        .tag(SidebarItem.folder(folder))
-                        .contextMenu {
-                            Button("Rename", systemImage: "pencil") {
-                                // TODO: Implement rename
+                    if renamingFolderId == folder.id {
+                        TextField("Folder name", text: $renamingFolderName)
+                            .textFieldStyle(.plain)
+                            .onSubmit {
+                                renameFolder(folder)
                             }
-                            Button("Delete", systemImage: "trash", role: .destructive) {
-                                deleteFolder(folder)
+                            .onExitCommand {
+                                renamingFolderId = nil
+                                renamingFolderName = ""
                             }
-                        }
+                    } else {
+                        SidebarRow(item: .folder(folder), count: folderCount(folder))
+                            .tag(SidebarItem.folder(folder))
+                            .onDoubleClick {
+                                renamingFolderId = folder.id.uuidString
+                                renamingFolderName = folder.name
+                            }
+                            .contextMenu {
+                                Button("Rename", systemImage: "pencil") {
+                                    renamingFolderId = folder.id.uuidString
+                                    renamingFolderName = folder.name
+                                }
+                                Button("Delete", systemImage: "trash", role: .destructive) {
+                                    deleteFolder(folder)
+                                }
+                            }
+                    }
                 }
                 
                 if isAddingFolder {
@@ -140,6 +159,18 @@ struct SidebarView: View {
         
         newFolderName = ""
         isAddingFolder = false
+    }
+    
+    private func renameFolder(_ folder: Folder) {
+        guard !renamingFolderName.isEmpty else {
+            renamingFolderId = nil
+            renamingFolderName = ""
+            return
+        }
+        
+        folder.name = renamingFolderName
+        renamingFolderId = nil
+        renamingFolderName = ""
     }
     
     private func deleteFolder(_ folder: Folder) {
