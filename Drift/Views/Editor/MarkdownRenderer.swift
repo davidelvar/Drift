@@ -281,7 +281,7 @@ struct MarkdownView: View {
     }
     
     private func highlightJSON(_ code: String) -> Text {
-        var result = Text("")
+        var segments: [Text] = []
         var i = 0
         let chars = Array(code)
         
@@ -289,7 +289,7 @@ struct MarkdownView: View {
             if chars[i] == "\"" {
                 if let endQuote = findCharacter(chars: chars, start: i + 1, char: "\"") {
                     let stringContent = String(chars[i...endQuote])
-                    result = result + Text(stringContent).foregroundStyle(Color(nsColor: .systemGreen))
+                    segments.append(Text(stringContent).foregroundStyle(Color(nsColor: .systemGreen)))
                     i = endQuote + 1
                     continue
                 }
@@ -297,26 +297,26 @@ struct MarkdownView: View {
             
             if chars[i] == "#" {
                 let comment = String(chars[i...].prefix { $0 != "\n" })
-                result = result + Text(comment).foregroundStyle(Color.gray)
+                segments.append(Text(comment).foregroundStyle(Color.gray))
                 i += comment.count
                 continue
             }
             
             let char = String(chars[i])
             if "{}[]:,".contains(char) {
-                result = result + Text(char).foregroundStyle(Color(nsColor: .systemPurple))
+                segments.append(Text(char).foregroundStyle(Color(nsColor: .systemPurple)))
             } else {
-                result = result + Text(char).foregroundStyle(.primary)
+                segments.append(Text(char).foregroundStyle(.primary))
             }
             
             i += 1
         }
         
-        return result
+        return segments.reduce(Text("")) { $0 + $1 }
     }
     
     private func highlightHTML(_ code: String) -> Text {
-        var result = Text("")
+        var segments: [Text] = []
         var i = 0
         let chars = Array(code)
         
@@ -324,7 +324,7 @@ struct MarkdownView: View {
             if chars[i] == "<" {
                 if let endTag = findCharacter(chars: chars, start: i + 1, char: ">") {
                     let tag = String(chars[i...endTag])
-                    result = result + Text(tag).foregroundStyle(Color(nsColor: .systemRed))
+                    segments.append(Text(tag).foregroundStyle(Color(nsColor: .systemRed)))
                     i = endTag + 1
                     continue
                 }
@@ -333,29 +333,29 @@ struct MarkdownView: View {
             if chars[i] == "\"" {
                 if let endQuote = findCharacter(chars: chars, start: i + 1, char: "\"") {
                     let stringContent = String(chars[i...endQuote])
-                    result = result + Text(stringContent).foregroundStyle(Color(nsColor: .systemGreen))
+                    segments.append(Text(stringContent).foregroundStyle(Color(nsColor: .systemGreen)))
                     i = endQuote + 1
                     continue
                 }
             }
             
             let char = String(chars[i])
-            result = result + Text(char).foregroundStyle(.primary)
+            segments.append(Text(char).foregroundStyle(.primary))
             i += 1
         }
         
-        return result
+        return segments.reduce(Text("")) { $0 + $1 }
     }
     
     private func highlightCode(code: String, keywords: [String], types: [String], stringColor: Color, keywordColor: Color, typeColor: Color, commentColor: Color) -> Text {
-        var result = Text("")
+        var segments: [Text] = []
         var i = 0
         let chars = Array(code)
         
         while i < chars.count {
             // Skip whitespace
             if chars[i].isWhitespace {
-                result = result + Text(String(chars[i]))
+                segments.append(Text(String(chars[i])))
                 i += 1
                 continue
             }
@@ -363,7 +363,7 @@ struct MarkdownView: View {
             // Comments
             if i + 1 < chars.count && chars[i] == "/" && chars[i + 1] == "/" {
                 let comment = String(chars[i...].prefix { $0 != "\n" })
-                result = result + Text(comment).foregroundStyle(commentColor)
+                segments.append(Text(comment).foregroundStyle(commentColor))
                 i += comment.count
                 continue
             }
@@ -372,7 +372,7 @@ struct MarkdownView: View {
             if i + 1 < chars.count && chars[i] == "/" && chars[i + 1] == "*" {
                 if let endIdx = findSubstring(chars: chars, start: i + 2, substring: "*/") {
                     let comment = String(chars[i...(endIdx + 1)])
-                    result = result + Text(comment).foregroundStyle(commentColor)
+                    segments.append(Text(comment).foregroundStyle(commentColor))
                     i = endIdx + 2
                     continue
                 }
@@ -383,7 +383,7 @@ struct MarkdownView: View {
                 let quote = chars[i]
                 if let endIdx = findCharacter(chars: chars, start: i + 1, char: quote) {
                     let stringContent = String(chars[i...endIdx])
-                    result = result + Text(stringContent).foregroundStyle(stringColor)
+                    segments.append(Text(stringContent).foregroundStyle(stringColor))
                     i = endIdx + 1
                     continue
                 }
@@ -399,11 +399,11 @@ struct MarkdownView: View {
                 }
                 
                 if keywords.contains(word) {
-                    result = result + Text(word).foregroundStyle(keywordColor)
+                    segments.append(Text(word).foregroundStyle(keywordColor))
                 } else if types.contains(word) {
-                    result = result + Text(word).foregroundStyle(typeColor)
+                    segments.append(Text(word).foregroundStyle(typeColor))
                 } else {
-                    result = result + Text(word)
+                    segments.append(Text(word))
                 }
                 
                 i = j
@@ -418,7 +418,7 @@ struct MarkdownView: View {
                     number.append(chars[j])
                     j += 1
                 }
-                result = result + Text(number).foregroundStyle(Color(nsColor: .systemCyan))
+                segments.append(Text(number).foregroundStyle(Color(nsColor: .systemCyan)))
                 i = j
                 continue
             }
@@ -426,15 +426,15 @@ struct MarkdownView: View {
             // Operators and punctuation
             let char = String(chars[i])
             if "{}[]().,;:+-*/<>=!&|?~".contains(char) {
-                result = result + Text(char).foregroundStyle(Color(nsColor: .systemPurple))
+                segments.append(Text(char).foregroundStyle(Color(nsColor: .systemPurple)))
             } else {
-                result = result + Text(char)
+                segments.append(Text(char))
             }
             
             i += 1
         }
         
-        return result
+        return segments.reduce(Text("")) { $0 + $1 }
     }
     
     private func findSubstring(chars: [Character], start: Int, substring: String) -> Int? {
@@ -451,11 +451,7 @@ struct MarkdownView: View {
     private func styledText(_ text: String) -> Text {
         // Parse all inline styles and build Text
         let segments = parseInlineMarkdown(text)
-        var result = Text("")
-        for segment in segments {
-            result = result + segment
-        }
-        return result
+        return segments.reduce(Text("")) { $0 + $1 }
     }
     
     private func parseInlineMarkdown(_ text: String) -> [Text] {

@@ -13,7 +13,9 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
     var font: String = "Menlo"
     var fontSize: CGFloat = 15
     
-    func makeNSView(context: Context) -> NSTextView {
+    func makeNSView(context: Context) -> NSScrollView {
+        let scrollView = NSScrollView()
+        
         let textView = NSTextView()
         textView.delegate = context.coordinator
         textView.font = NSFont(name: font, size: fontSize) ?? NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
@@ -22,21 +24,38 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
         textView.allowsUndo = true
         textView.enabledTextCheckingTypes = 0
         textView.string = text
+        textView.isVerticallyResizable = true
+        textView.isHorizontallyResizable = true
+        textView.autoresizingMask = [.width, .height]
+        textView.minSize = NSSize(width: 0, height: 0)
+        textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        
+        // Store textView in coordinator for later access
+        context.coordinator.textView = textView
+        
+        // Configure scroll view
+        scrollView.documentView = textView
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = true
+        scrollView.autohidesScrollers = true
+        scrollView.backgroundColor = NSColor.textBackgroundColor
         
         // Apply initial highlighting
         context.coordinator.applyMarkdownHighlighting(to: textView)
         
-        return textView
+        return scrollView
     }
     
-    func updateNSView(_ nsView: NSTextView, context: Context) {
-        if nsView.string != text {
-            nsView.string = text
-            context.coordinator.applyMarkdownHighlighting(to: nsView)
+    func updateNSView(_ nsView: NSScrollView, context: Context) {
+        guard let textView = nsView.documentView as? NSTextView else { return }
+        
+        if textView.string != text {
+            textView.string = text
+            context.coordinator.applyMarkdownHighlighting(to: textView)
         }
         
-        if let currentFont = nsView.font, currentFont.fontName != font || currentFont.pointSize != fontSize {
-            nsView.font = NSFont(name: font, size: fontSize) ?? NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
+        if let currentFont = textView.font, currentFont.fontName != font || currentFont.pointSize != fontSize {
+            textView.font = NSFont(name: font, size: fontSize) ?? NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
         }
     }
     
@@ -46,6 +65,7 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
     
     class Coordinator: NSObject, NSTextViewDelegate {
         @Binding var text: String
+        var textView: NSTextView?
         
         init(text: Binding<String>) {
             self._text = text
@@ -72,52 +92,10 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
             attributedString.addAttribute(.foregroundColor, value: NSColor.labelColor, range: fullRange)
             
             let nsString = string as NSString
-            let lines = nsString.components(separatedBy: .newlines)
-            var currentLocation = 0
             
-            for line in lines {
-                let lineRange = NSRange(location: currentLocation, length: line.count)
-                
-                // Headings - blue
-                if line.hasPrefix("#") {
-                    attributedString.addAttribute(.foregroundColor, value: NSColor.systemBlue, range: lineRange)
-                }
-                
-                // Bold **text** - orange
-                findAndHighlightPattern(in: attributedString, pattern: "\\*\\*(.+?)\\*\\*", color: NSColor.systemOrange, range: lineRange)
-                
-                // Italic *text* or _text_ - green
-                findAndHighlightPattern(in: attributedString, pattern: "_(.+?)_", color: NSColor.systemGreen, range: lineRange)
-                findAndHighlightPattern(in: attributedString, pattern: "(?<!\\*)\\*(?!\\*)(.+?)(?<!\\*)\\*(?!\\*)", color: NSColor.systemGreen, range: lineRange)
-                
-                // Inline code `code` - red
-                findAndHighlightPattern(in: attributedString, pattern: "`(.+?)`", color: NSColor.systemRed, range: lineRange)
-                
-                // Links [text](url) - blue
-                findAndHighlightPattern(in: attributedString, pattern: "\\[(.+?)\\]\\((.+?)\\)", color: NSColor.systemBlue, range: lineRange)
-                
-                // Blockquotes - gray
-                if line.hasPrefix(">") {
-                    attributedString.addAttribute(.foregroundColor, value: NSColor.systemGray, range: lineRange)
-                }
-                
-                // Code blocks - purple
-                if line.hasPrefix("```") {
-                    attributedString.addAttribute(.foregroundColor, value: NSColor.systemPurple, range: lineRange)
-                }
-                
-                // Lists - cyan
-                let trimmed = line.trimmingCharacters(in: .whitespaces)
-                if trimmed.hasPrefix("-") || trimmed.hasPrefix("*") || trimmed.hasPrefix("+") {
-                    let startOffset = line.count - trimmed.count
-                    let dashRange = NSRange(location: currentLocation + startOffset, length: 1)
-                    if dashRange.location + dashRange.length <= attributedString.length {
-                        attributedString.addAttribute(.foregroundColor, value: NSColor.systemCyan, range: dashRange)
-                    }
-                }
-                
-                currentLocation += line.count + 1 // +1 for newline
-            }
+            // Process inline markdown highlighting only
+            // Focus on: bold, italic, code, links
+            highlightInlineMarkdownInDocument(in: attributedString, nsString: nsString)
             
             // Apply the attributed string without losing undo/redo
             let savedSelectedRange = textView.selectedRange()
@@ -129,13 +107,101 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
             }
         }
         
-        private func findAndHighlightPattern(in attributedString: NSMutableAttributedString, pattern: String, color: NSColor, range: NSRange) {
-            guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return }
+        private func highlightInlineMarkdownInDocument(in attributedString: NSMutableAttributedString, nsString: NSString) {
+            let fullString = nsString as String
+            let chars = Array(fullString)
+            var i = 0
             
-            let matches = regex.matches(in: attributedString.string, options: [], range: range)
-            for match in matches {
-                attributedString.addAttribute(.foregroundColor, value: color, range: match.range)
+            while i < chars.count {
+                // Check for links [text](url)
+                if chars[i] == "[" {
+                    if let closeBracket = findClosingBracket(chars: chars, start: i + 1, open: "[", close: "]"),
+                       closeBracket + 1 < chars.count && chars[closeBracket + 1] == "(" {
+                        if let closeParen = findClosingBracket(chars: chars, start: closeBracket + 2, open: "(", close: ")") {
+                            let linkRange = NSRange(location: i, length: closeParen - i + 1)
+                            if linkRange.location + linkRange.length <= attributedString.length {
+                                attributedString.addAttribute(.foregroundColor, value: NSColor.systemBlue, range: linkRange)
+                            }
+                            i = closeParen + 1
+                            continue
+                        }
+                    }
+                }
+                
+                // Check for bold **text**
+                if i + 1 < chars.count && chars[i] == "*" && chars[i + 1] == "*" {
+                    if let endBold = findSubstring(chars: chars, start: i + 2, substring: "**") {
+                        let boldRange = NSRange(location: i, length: endBold - i + 2)
+                        if boldRange.location + boldRange.length <= attributedString.length {
+                            attributedString.addAttribute(.foregroundColor, value: NSColor.systemOrange, range: boldRange)
+                        }
+                        i = endBold + 2
+                        continue
+                    }
+                }
+                
+                // Check for italic _text_
+                if chars[i] == "_" {
+                    if let endItalic = findCharacter(chars: chars, start: i + 1, char: "_") {
+                        let italicRange = NSRange(location: i, length: endItalic - i + 1)
+                        if italicRange.location + italicRange.length <= attributedString.length {
+                            attributedString.addAttribute(.foregroundColor, value: NSColor.systemGreen, range: italicRange)
+                        }
+                        i = endItalic + 1
+                        continue
+                    }
+                }
+                
+                // Check for inline code `code`
+                if chars[i] == "`" {
+                    if let endCode = findCharacter(chars: chars, start: i + 1, char: "`") {
+                        let codeRange = NSRange(location: i, length: endCode - i + 1)
+                        if codeRange.location + codeRange.length <= attributedString.length {
+                            attributedString.addAttribute(.foregroundColor, value: NSColor.systemRed, range: codeRange)
+                        }
+                        i = endCode + 1
+                        continue
+                    }
+                }
+                
+                i += 1
             }
+        }
+        
+        private func findClosingBracket(chars: [Character], start: Int, open: Character, close: Character) -> Int? {
+            var depth = 1
+            for i in start..<chars.count {
+                if chars[i] == open {
+                    depth += 1
+                } else if chars[i] == close {
+                    depth -= 1
+                    if depth == 0 {
+                        return i
+                    }
+                }
+            }
+            return nil
+        }
+        
+        private func findCharacter(chars: [Character], start: Int, char: Character) -> Int? {
+            for i in start..<chars.count {
+                if chars[i] == char {
+                    return i
+                }
+            }
+            return nil
+        }
+        
+        private func findSubstring(chars: [Character], start: Int, substring: String) -> Int? {
+            let subChars = Array(substring)
+            guard start + subChars.count <= chars.count else { return nil }
+            
+            for i in start..<(chars.count - subChars.count + 1) {
+                if chars[i..<(i + subChars.count)].elementsEqual(subChars) {
+                    return i
+                }
+            }
+            return nil
         }
     }
 }
