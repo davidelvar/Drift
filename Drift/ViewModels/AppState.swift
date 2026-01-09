@@ -2,7 +2,7 @@
 //  AppState.swift
 //  Drift
 //
-//  Central app state management
+//  Root app state container with feature-based sub-states
 //
 
 import Foundation
@@ -10,27 +10,81 @@ import SwiftUI
 
 @Observable
 final class AppState {
-    // Navigation state
-    var selectedSidebarItem: SidebarItem = .allNotes
-    var selectedNote: Note?
-    var searchQuery: String = ""
+    // Feature-based state containers
+    var editorState: EditorState
+    var noteListState: NoteListState
+    var sidebarState: SidebarState
     
-    // UI state
-    var isSearchFocused: Bool = false
-    var isSidebarVisible: Bool = true
-    var isInspectorVisible: Bool = false
-    var isFocusMode: Bool = false
+    init(
+        editorState: EditorState = EditorState(),
+        noteListState: NoteListState = NoteListState(),
+        sidebarState: SidebarState = SidebarState()
+    ) {
+        self.editorState = editorState
+        self.noteListState = noteListState
+        self.sidebarState = sidebarState
+    }
     
-    // Editor state
-    var isEditing: Bool = false
-    var editorMode: EditorMode = .Edit
+    // MARK: - Convenience Properties (backward compatibility)
+    var selectedSidebarItem: SidebarItem {
+        get { sidebarState.selectedSidebarItem }
+        set { sidebarState.selectedSidebarItem = newValue }
+    }
     
-    init() {}
+    var selectedNote: Note? {
+        get { noteListState.selectedNote }
+        set { noteListState.selectedNote = newValue }
+    }
     
+    var searchQuery: String {
+        get { noteListState.searchQuery }
+        set { noteListState.searchQuery = newValue }
+    }
+    
+    var editorMode: EditorMode {
+        get { editorState.editorMode }
+        set { editorState.editorMode = newValue }
+    }
+    
+    var isFocusMode: Bool {
+        get { editorState.isFocusMode }
+        set { editorState.isFocusMode = newValue }
+    }
+    
+    var isEditing: Bool {
+        get { editorState.isEditing }
+        set { editorState.isEditing = newValue }
+    }
+    
+    var isSidebarVisible: Bool {
+        get { sidebarState.isSidebarVisible }
+        set { sidebarState.isSidebarVisible = newValue }
+    }
+    
+    var isInspectorVisible: Bool {
+        get { sidebarState.isInspectorVisible }
+        set { sidebarState.isInspectorVisible = newValue }
+    }
+    
+    // MARK: - Methods (forwarded to feature states)
     func toggleFocusMode() {
-        withAnimation(.easeInOut(duration: 0.3)) {
-            isFocusMode.toggle()
-        }
+        editorState.toggleFocusMode()
+    }
+    
+    func setEditorMode(_ mode: EditorMode) {
+        editorState.setEditorMode(mode)
+    }
+    
+    func selectSidebarItem(_ item: SidebarItem) {
+        sidebarState.selectItem(item)
+    }
+    
+    func selectNote(_ note: Note?) {
+        noteListState.selectNote(note)
+    }
+    
+    func setSearchQuery(_ query: String) {
+        noteListState.setSearchQuery(query)
     }
 }
 

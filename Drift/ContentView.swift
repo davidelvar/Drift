@@ -58,9 +58,6 @@ struct ContentView: View {
                 appState.selectedNote = nil
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .focusSearch)) { _ in
-            appState.isSearchFocused = true
-        }
         .onReceive(NotificationCenter.default.publisher(for: .toggleSidebar)) { _ in
             withAnimation {
                 if columnVisibility == .all {

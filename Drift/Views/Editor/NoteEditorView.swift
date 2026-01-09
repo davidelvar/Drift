@@ -9,20 +9,6 @@ import SwiftUI
 import SwiftData
 import AppKit
 
-enum EditorMode: String, CaseIterable {
-    case Edit
-    case Preview
-    case Split
-    
-    var icon: String {
-        switch self {
-        case .Edit: return "pencil"
-        case .Preview: return "eye"
-        case .Split: return "rectangle.split.2x1"
-        }
-    }
-}
-
 struct NoteEditorView: View {
     @Bindable var note: Note
     @Bindable var appState: AppState
