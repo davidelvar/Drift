@@ -221,6 +221,9 @@ PluginManager.shared.register(MyAwesomePlugin())
 ### Phase 2.1: Service Layer Refactoring 🏗️
 Currently in development. See [Phase 2.1 Project Document](docs/PHASE_2_1_SERVICE_LAYER.md) for detailed implementation plan, timeline, and technical specifications.
 
+### Phase 3: Comprehensive GitHub Flavored Markdown Support 📝
+Planned for Q1 2026. See [Phase 3 Project Document](docs/PROJECT_GFM_COMPREHENSIVE_SUPPORT.md) for complete GFM compliance, interactive editing, syntax highlighting, and performance optimization plan.
+
 ### v1.1 (Planned)
 - [ ] Syntax highlighting in code blocks
 - [ ] Custom themes (Light/Dark/Custom)

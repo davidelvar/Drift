@@ -43,6 +43,14 @@ Welcome to the Drift documentation! Here you'll find everything you need to use,
   - Service specifications (NoteRelationshipService, FolderService, TagService)
   - View refactoring checklist
 
+- **[Phase 3: Comprehensive GitHub Flavored Markdown Support](PROJECT_GFM_COMPREHENSIVE_SUPPORT.md)** - Full GFM compliance with interactive editing
+  - Complete feature support matrix
+  - AST-based syntax highlighting (15+ languages)
+  - Interactive task lists and table editing
+  - Preview scroll synchronization
+  - Performance optimization and caching
+  - 4-6 week implementation timeline
+
 ## For Contributors
 
 Start here if you want to contribute:
