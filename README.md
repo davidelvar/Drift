@@ -33,7 +33,7 @@ Drift is a modern note-taking application built with SwiftUI and SwiftData, desi
 
 ## 📸 Screenshots
 
-![Drift App Screenshot](docs/images/drift-screenshot.png)
+![Drift App Screenshot](docs/images/docs-screenshot-1.png)
 
 ## � Documentation
 
