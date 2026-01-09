@@ -2,6 +2,8 @@
 
 **A beautiful, extensible, open-source notes app for macOS.**
 
+![Drift App Screenshot](docs/images/docs-screenshot-1.png)
+
 Drift is a modern note-taking application built with SwiftUI and SwiftData, designed for writers, developers, and anyone who values a clean, distraction-free writing experience. With full Markdown support, a powerful plugin system, and a focus on privacy, Drift puts you in control of your notes.
 
 ![macOS](https://img.shields.io/badge/macOS-14.0+-blue)
@@ -31,10 +33,6 @@ Drift is a modern note-taking application built with SwiftUI and SwiftData, desi
 - **Privacy-First** - All data stored locally on your Mac using SwiftData
 - **Open Source** - MIT licensed, community-driven development
 
-## 📸 Screenshots
-
-![Drift App Screenshot](docs/images/docs-screenshot-1.png)
-
 ## � Documentation
 
 Complete documentation is available in the [docs/](docs/) folder:
@@ -46,7 +44,7 @@ Complete documentation is available in the [docs/](docs/) folder:
 
 ## �🚀 Getting Started
 
-### Requirements
+### Requirement
 
 - **macOS 14.0** (Sonoma) or later
 - **Xcode 15.0** or later (for building from source)
