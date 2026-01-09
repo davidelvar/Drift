@@ -35,28 +35,7 @@ struct UnifiedDraculaTheme {
     static let codeString = NSColor(red: 0.945, green: 0.980, blue: 0.549, alpha: 1.0)    // #f1fa8c (yellow)
 }
 
-// MARK: - Syntax Highlight Data Structure
-struct SyntaxHighlight {
-    let range: NSRange
-    let attributes: [NSAttributedString.Key: Any]
-    let priority: Int // Higher priority = applied later (can override earlier highlights)
-    
-    init(range: NSRange, color: NSColor, priority: Int = 0, isBold: Bool = false, isItalic: Bool = false) {
-        self.range = range
-        self.priority = priority
-        
-        var attrs: [NSAttributedString.Key: Any] = [.foregroundColor: color]
-        
-        if isBold {
-            attrs[.font] = NSFont.systemFont(ofSize: 13, weight: .bold)
-        }
-        if isItalic {
-            attrs[.obliqueness] = 0.2
-        }
-        
-        self.attributes = attrs
-    }
-}
+
 
 // MARK: - Unified Markdown Highlighter
 @MainActor
@@ -202,8 +181,7 @@ final class UnifiedMarkdownHighlighter {
             let highlight = SyntaxHighlight(
                 range: match.range,
                 color: UnifiedDraculaTheme.heading,
-                priority: 3,
-                isBold: true
+                priority: 3
             )
             highlights.append(highlight)
         }
@@ -274,8 +252,7 @@ final class UnifiedMarkdownHighlighter {
             highlights.append(SyntaxHighlight(
                 range: match.range,
                 color: UnifiedDraculaTheme.bold,
-                priority: 5,
-                isBold: true
+                priority: 4
             ))
         }
         
@@ -319,8 +296,7 @@ final class UnifiedMarkdownHighlighter {
             highlights.append(SyntaxHighlight(
                 range: match.range,
                 color: UnifiedDraculaTheme.italic,
-                priority: 7,
-                isItalic: true
+                priority: 7
             ))
         }
         
@@ -333,8 +309,7 @@ final class UnifiedMarkdownHighlighter {
             highlights.append(SyntaxHighlight(
                 range: match.range,
                 color: UnifiedDraculaTheme.italic,
-                priority: 7,
-                isItalic: true
+                priority: 7
             ))
         }
         
