@@ -33,6 +33,16 @@ Welcome to the Drift documentation! Here you'll find everything you need to use,
   - View hierarchy
   - Design patterns
 
+## Project Management
+
+- **[Phase 2.1: Service Layer Refactoring](PHASE_2_1_SERVICE_LAYER.md)** - Implementation roadmap
+  - Architecture overview
+  - Step-by-step implementation plan
+  - Timeline and task breakdown
+  - Success criteria and risk analysis
+  - Service specifications (NoteRelationshipService, FolderService, TagService)
+  - View refactoring checklist
+
 ## For Contributors
 
 Start here if you want to contribute:

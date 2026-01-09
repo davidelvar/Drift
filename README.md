@@ -218,6 +218,9 @@ PluginManager.shared.register(MyAwesomePlugin())
 - [x] Formatting toolbar
 - [x] Note sorting
 
+### Phase 2.1: Service Layer Refactoring 🏗️
+Currently in development. See [Phase 2.1 Project Document](docs/PHASE_2_1_SERVICE_LAYER.md) for detailed implementation plan, timeline, and technical specifications.
+
 ### v1.1 (Planned)
 - [ ] Syntax highlighting in code blocks
 - [ ] Custom themes (Light/Dark/Custom)
