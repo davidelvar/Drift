@@ -33,9 +33,18 @@ Drift is a modern note-taking application built with SwiftUI and SwiftData, desi
 
 ## 📸 Screenshots
 
-*Coming soon*
+![Drift App Screenshot](docs/images/drift-screenshot.png)
 
-## 🚀 Getting Started
+## � Documentation
+
+Complete documentation is available in the [docs/](docs/) folder:
+
+- **[User Guide](docs/USER_GUIDE.md)** - Getting started and using Drift
+- **[Keyboard Shortcuts](docs/KEYBOARD_SHORTCUTS.md)** - Master your workflow
+- **[Development Guide](docs/DEVELOPMENT.md)** - Set up your development environment
+- **[Architecture Guide](docs/ARCHITECTURE.md)** - Understand how Drift works
+
+## �🚀 Getting Started
 
 ### Requirements
 

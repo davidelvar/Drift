@@ -583,18 +583,19 @@ extension Color {
 // MARK: - Empty State
 struct EmptyEditorView: View {
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 6) {
             Image("select-note")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 64, height: 64)
             
             Text("Select a note")
-                .font(.title2)
+                .font(.title.weight(.semibold))
                 .foregroundStyle(.secondary)
+                .padding(.top, 6)
             
             Text("Choose a note from the list or create a new one")
-                .font(.subheadline)
+                .font(.system(size: 12))
                 .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
