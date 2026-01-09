@@ -8,6 +8,34 @@
 import SwiftUI
 import AppKit
 
+// MARK: - Custom Text View for Task List Handling
+
+class InteractiveMarkdownTextView: NSTextView {
+    weak var interactionDelegate: InteractiveMarkdownTextViewDelegate?
+    
+    override func mouseDown(with event: NSEvent) {
+        // Get click location
+        let clickPoint = convert(event.locationInWindow, from: nil)
+        guard let characterIndex = layoutManager?.characterIndex(for: clickPoint, in: textContainer!, fractionOfDistanceBetweenInsertionPoints: nil) else {
+            super.mouseDown(with: event)
+            return
+        }
+        
+        // Check if this was a double-click
+        if event.clickCount == 1 {
+            // Let the delegate handle potential task list clicks
+            interactionDelegate?.markdownTextView(self, didClickAt: characterIndex)
+        }
+        
+        // Always pass to super for normal text selection behavior
+        super.mouseDown(with: event)
+    }
+}
+
+protocol InteractiveMarkdownTextViewDelegate: AnyObject {
+    func markdownTextView(_ textView: InteractiveMarkdownTextView, didClickAt location: Int)
+}
+
 // MARK: - Line Number Ruler View
 class LineNumberRulerView: NSRulerView {
     private weak var textView: NSTextView?
@@ -86,8 +114,9 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
     func makeNSView(context: Context) -> NSScrollView {
         let scrollView = NSScrollView()
         
-        let textView = NSTextView()
+        let textView = InteractiveMarkdownTextView()
         textView.delegate = context.coordinator
+        textView.interactionDelegate = context.coordinator
         textView.font = NSFont(name: font, size: fontSize) ?? NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
         textView.textColor = DraculaTheme.foreground
         textView.backgroundColor = DraculaTheme.background
@@ -151,9 +180,10 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
         Coordinator(text: $text)
     }
     
-    class Coordinator: NSObject, NSTextViewDelegate {
+    class Coordinator: NSObject, NSTextViewDelegate, InteractiveMarkdownTextViewDelegate {
         @Binding var text: String
         var textView: NSTextView?
+        private let taskListManager = TaskListInteractivityManager()
         
         init(text: Binding<String>) {
             self._text = text
@@ -165,6 +195,37 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
             
             // Apply syntax highlighting
             applyMarkdownHighlighting(to: textView)
+        }
+        
+        /// Handle task list checkbox clicks
+        /// Called when user clicks on a checkbox in the editor
+        func handleTaskListClick(in textView: NSTextView, at location: Int) {
+            guard textView.textStorage != nil else { return }
+            
+            // Try to toggle the checkbox
+            if taskListManager.toggleTaskAtLocation(in: textView.textStorage!, location: location) {
+                // Update the text binding
+                text = textView.string
+                
+                // Register undo action
+                let undoManager = textView.undoManager
+                undoManager?.registerUndo(withTarget: self) { target in
+                    // Redo action: toggle again
+                    target.handleTaskListClick(in: textView, at: location)
+                }
+                
+                // Re-apply highlighting to show updated state
+                applyMarkdownHighlighting(to: textView)
+            }
+        }
+        
+        // MARK: - InteractiveMarkdownTextViewDelegate
+        
+        func markdownTextView(_ textView: InteractiveMarkdownTextView, didClickAt location: Int) {
+            // Try to handle as task list click
+            if taskListManager.taskListItemAt(in: textView.textStorage!, location: location) != nil {
+                handleTaskListClick(in: textView, at: location)
+            }
         }
         
         func applyMarkdownHighlighting(to textView: NSTextView) {

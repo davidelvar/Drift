@@ -102,18 +102,21 @@ final class UnifiedMarkdownHighlighter {
         // 11. Tables (pipes and alignment markers)
         highlights.append(contentsOf: highlightTables(text))
         
-        // Sort by priority, then by range location
-        highlights.sort { a, b in
-            if a.priority != b.priority {
-                return a.priority < b.priority
-            }
-            return a.range.location < b.range.location
-        }
+        // 12. Extended GFM Features (autolinks, footnotes, callouts)
+        let extendedHighlighter = ExtendedGFMHighlighter()
+        let extendedHighlights = [
+            extendedHighlighter.highlightAutolinks(text),
+            extendedHighlighter.highlightFootnotes(text),
+            extendedHighlighter.highlightCallouts(text)
+        ].flatMap { $0 }
+        
+        // Merge extended highlights with priority-based conflict resolution
+        let mergedHighlights = extendedHighlighter.mergeHighlights(highlights, with: extendedHighlights)
         
         // Cache the results
-        highlightCache[text] = highlights
+        highlightCache[text] = mergedHighlights
         
-        return highlights
+        return mergedHighlights
     }
     
     // MARK: - Private Highlighting Methods
