@@ -10,6 +10,18 @@ import Foundation
 import AppKit
 import Splash
 
+// MARK: - Splash Compatibility Types (Placeholders for future integration)
+typealias SyntaxHighlighter = Any  // Placeholder for Splash SyntaxHighlighter
+
+struct Dracula {
+    // Placeholder for Splash Dracula theme
+    // Pattern-based highlighting handles all colors for now
+}
+
+struct HtmlFormat {
+    // Placeholder for Splash HtmlFormat
+}
+
 // MARK: - Language Support Enum
 enum SourceLanguage: String, CaseIterable {
     case swift
@@ -68,11 +80,8 @@ enum SourceLanguage: String, CaseIterable {
 @MainActor
 final class LanguageSyntaxHighlighter {
     
-    // MARK: - Cached Highlighters
-    private static var splashHighlighters: [SourceLanguage: SyntaxHighlighter] = [:]
-    
-    // MARK: - Dracula Theme for Code
-    private static let draculaTheme = Dracula()
+    // MARK: - Cached Highlighters (for future Splash integration)
+    private static var splashHighlighters: [SourceLanguage: Any] = [:]
     
     /// Highlight a code block with specified language
     /// - Parameters:
@@ -127,29 +136,17 @@ final class LanguageSyntaxHighlighter {
     }
     
     /// Highlight with Splash if available for the language
+    /// Note: This is a placeholder for future Splash integration.
+    /// Currently uses pattern-based highlighting instead.
     static func highlightWithSplash(
         code: String,
         language: SourceLanguage,
         in storage: NSTextStorage,
         baseOffset: Int = 0
     ) {
-        // Get or create highlighter
-        if splashHighlighters[language] == nil {
-            splashHighlighters[language] = SyntaxHighlighter(
-                format: HtmlFormat(),
-                theme: draculaTheme
-            )
-        }
-        
-        guard let highlighter = splashHighlighters[language] else {
-            highlightAsPlainText(code, in: storage, baseOffset: baseOffset)
-            return
-        }
-        
-        // Use Splash to highlight
-        let html = highlighter.highlight(code)
-        // Parse HTML and apply attributes (simplified - in production would be more robust)
-        applyHighlightedText(html, to: storage, baseOffset: baseOffset)
+        // For now, delegate to pattern-based highlighting
+        // Future: integrate full Splash when library is available
+        highlight(code: code, language: language, in: storage, baseOffset: baseOffset)
     }
     
     // MARK: - Language-Specific Highlighters

@@ -429,7 +429,10 @@ final class UnifiedMarkdownHighlighter {
             // Highlight the checkbox brackets
             let matchText = nsText.substring(with: match.range)
             if let bracketStart = matchText.range(of: "[") {
-                let offset = nsText.range(of: matchText)!.location + matchText.distance(from: matchText.startIndex, to: bracketStart.lowerBound)
+                let foundRange = nsText.range(of: matchText)
+                guard foundRange.location != NSNotFound else { continue }
+                
+                let offset = foundRange.location + matchText.distance(from: matchText.startIndex, to: bracketStart.lowerBound)
                 let bracketRange = NSRange(location: offset, length: 3) // "[x]" or "[ ]"
                 
                 highlights.append(SyntaxHighlight(
