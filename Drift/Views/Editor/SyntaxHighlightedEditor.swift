@@ -167,8 +167,21 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
         guard let textView = nsView.documentView as? NSTextView else { return }
         
         if textView.string != text {
+            // Preserve scroll position during text update
+            let scrollView = nsView
+            let previousScroll = scrollView.documentVisibleRect.origin
+            let previousSelectedRange = textView.selectedRange
+            
             textView.string = text
             context.coordinator.applyMarkdownHighlighting(to: textView)
+            
+            // Restore scroll position and selection
+            if previousScroll != .zero {
+                scrollView.contentView.scroll(to: previousScroll)
+            }
+            if previousSelectedRange.location <= textView.string.count {
+                textView.setSelectedRange(previousSelectedRange)
+            }
         }
         
         if let currentFont = textView.font, currentFont.fontName != font || currentFont.pointSize != fontSize {
@@ -231,6 +244,11 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
         func applyMarkdownHighlighting(to textView: NSTextView) {
             let string = textView.string
             guard !string.isEmpty else { return }
+            
+            // Preserve scroll and selection state
+            let scrollView = textView.enclosingScrollView
+            let previousScroll = scrollView?.documentVisibleRect.origin ?? .zero
+            let previousSelectedRange = textView.selectedRange
             
             let attributedString = NSMutableAttributedString(string: string)
             let fullRange = NSRange(location: 0, length: string.count)
@@ -295,12 +313,16 @@ struct SyntaxHighlightedEditor: NSViewRepresentable {
             )
             
             // Apply the attributed string without losing undo/redo
-            let savedSelectedRange = textView.selectedRange()
             textView.textStorage?.setAttributedString(attributedString)
             
-            // Restore selection if it's still valid
-            if savedSelectedRange.location <= textView.string.count {
-                textView.setSelectedRange(savedSelectedRange)
+            // Restore selection and scroll position if they're still valid
+            if previousSelectedRange.location <= textView.string.count {
+                textView.setSelectedRange(previousSelectedRange)
+            }
+            
+            // Restore scroll position if the scroll view exists
+            if let scrollView = scrollView, previousScroll != .zero {
+                scrollView.contentView.scroll(to: previousScroll)
             }
         }
         
