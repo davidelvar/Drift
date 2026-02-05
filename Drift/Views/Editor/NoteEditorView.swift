@@ -168,7 +168,7 @@ struct NoteEditorView: View {
                 .help("Focus Mode (⌘⇧F)")
                 
                 Button(action: { note.togglePin() }) {
-                    Image(note.isPinned ? "star-full" : "star-empty")
+                    Image(systemName: note.isPinned ? "star.fill" : "star")
                 }
                 .help(note.isPinned ? "Remove from Favorites" : "Add to Favorites")
                 

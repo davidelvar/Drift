@@ -171,6 +171,7 @@ extension Theme {
                     .markdownTextStyle {
                         FontFamilyVariant(.monospaced)
                         FontSize(.em(0.85))
+                        ForegroundColor(.driftText)
                     }
                     .padding(16)
             }
@@ -232,11 +233,12 @@ extension Theme {
 /// Theme implementation based on gonzalezreal/swift-markdown-ui GitHub theme
 struct MarkdownView: View {
     let content: String
-    
+
     var body: some View {
         ScrollView {
             Markdown(content)
                 .markdownTheme(.driftDark)
+                .textSelection(.enabled)
                 .padding(24)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }

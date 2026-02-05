@@ -123,24 +123,58 @@ final class UnifiedMarkdownHighlighter {
     
     private func highlightCodeBlocks(_ text: String) -> [SyntaxHighlight] {
         var highlights: [SyntaxHighlight] = []
-        
-        // Match fenced code blocks: ```language ... ```
-        let pattern = "```[a-zA-Z0-9]*\\n[\\s\\S]*?```"
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return highlights }
-        
-        let nsText = text as NSString
-        let range = NSRange(location: 0, length: nsText.length)
-        let matches = regex.matches(in: text, range: range)
-        
-        for match in matches {
-            let highlight = SyntaxHighlight(
-                range: match.range,
-                color: UnifiedDraculaTheme.code,
-                priority: 1  // Low priority - can be overridden for language detection
-            )
-            highlights.append(highlight)
+
+        // Match fenced code blocks using line-by-line parsing for reliability
+        // This ensures we capture all three backticks at both start and end
+        let lines = text.components(separatedBy: "\n")
+        var inCodeBlock = false
+        var blockStartPosition = 0
+        var openingFenceEnd = 0
+        var currentPosition = 0
+
+        for line in lines {
+            let trimmedLine = line.trimmingCharacters(in: .whitespaces)
+            if trimmedLine.hasPrefix("```") {
+                if inCodeBlock {
+                    // Closing fence - highlight from start to end of this line
+                    let blockEnd = currentPosition + line.count
+                    let blockRange = NSRange(location: blockStartPosition, length: blockEnd - blockStartPosition)
+
+                    // Highlight entire block content (lower priority)
+                    highlights.append(SyntaxHighlight(
+                        range: blockRange,
+                        color: UnifiedDraculaTheme.code,
+                        priority: 1
+                    ))
+
+                    // Highlight opening fence line (higher priority for fence markers)
+                    let openingFenceRange = NSRange(location: blockStartPosition, length: openingFenceEnd - blockStartPosition)
+                    highlights.append(SyntaxHighlight(
+                        range: openingFenceRange,
+                        color: UnifiedDraculaTheme.codePrimary,
+                        priority: 2
+                    ))
+
+                    // Highlight closing fence line (higher priority for fence markers)
+                    let closingFenceRange = NSRange(location: currentPosition, length: line.count)
+                    highlights.append(SyntaxHighlight(
+                        range: closingFenceRange,
+                        color: UnifiedDraculaTheme.codePrimary,
+                        priority: 2
+                    ))
+
+                    inCodeBlock = false
+                } else {
+                    // Opening fence
+                    blockStartPosition = currentPosition
+                    openingFenceEnd = currentPosition + line.count
+                    inCodeBlock = true
+                }
+            }
+            // Move position forward (line length + newline character)
+            currentPosition += line.count + 1
         }
-        
+
         return highlights
     }
     
@@ -392,27 +426,26 @@ final class UnifiedMarkdownHighlighter {
     
     private func highlightTaskLists(_ text: String) -> [SyntaxHighlight] {
         var highlights: [SyntaxHighlight] = []
-        
-        // Match task list checkboxes: [ ] or [x] (case-insensitive)
-        let pattern = "-\\s\\[[x ]\\]"
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive, .anchorsMatchLines]) else {
+
+        // Match task list checkboxes: - [ ] or - [x] or * [ ] or + [ ] (case-insensitive)
+        // Pattern matches the list marker, space, and checkbox
+        let pattern = "^\\s*[-*+]\\s+\\[[xX ]\\]"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.anchorsMatchLines]) else {
             return highlights
         }
-        
+
         let nsText = text as NSString
         let range = NSRange(location: 0, length: nsText.length)
         let matches = regex.matches(in: text, range: range)
-        
+
         for match in matches {
-            // Highlight the checkbox brackets
             let matchText = nsText.substring(with: match.range)
-            if let bracketStart = matchText.range(of: "[") {
-                let foundRange = nsText.range(of: matchText)
-                guard foundRange.location != NSNotFound else { continue }
-                
-                let offset = foundRange.location + matchText.distance(from: matchText.startIndex, to: bracketStart.lowerBound)
-                let bracketRange = NSRange(location: offset, length: 3) // "[x]" or "[ ]"
-                
+
+            // Find the bracket position within this specific match
+            if let bracketIndex = matchText.firstIndex(of: "[") {
+                let bracketOffset = matchText.distance(from: matchText.startIndex, to: bracketIndex)
+                let bracketRange = NSRange(location: match.range.location + bracketOffset, length: 3) // "[x]" or "[ ]"
+
                 highlights.append(SyntaxHighlight(
                     range: bracketRange,
                     color: UnifiedDraculaTheme.taskCheckbox,
@@ -420,31 +453,55 @@ final class UnifiedMarkdownHighlighter {
                 ))
             }
         }
-        
+
         return highlights
     }
     
     private func highlightTables(_ text: String) -> [SyntaxHighlight] {
         var highlights: [SyntaxHighlight] = []
-        
-        // Match table separator lines: | --- | --- |
-        let separatorPattern = "\\|\\s*[-:]+\\s*\\|"
-        guard let separatorRegex = try? NSRegularExpression(pattern: separatorPattern) else {
+        let nsText = text as NSString
+
+        // Match full table separator lines: |:---|---:|:---:|---|
+        // Pattern: line starting with optional whitespace, then pipe, followed by alignment markers and more pipes
+        let separatorLinePattern = "^\\s*\\|(?:\\s*:?-+:?\\s*\\|)+\\s*$"
+        guard let separatorLineRegex = try? NSRegularExpression(pattern: separatorLinePattern, options: [.anchorsMatchLines]) else {
             return highlights
         }
-        
-        let nsText = text as NSString
+
         let range = NSRange(location: 0, length: nsText.length)
-        let matches = separatorRegex.matches(in: text, range: range)
-        
-        for match in matches {
+        let separatorMatches = separatorLineRegex.matches(in: text, range: range)
+
+        for match in separatorMatches {
             highlights.append(SyntaxHighlight(
                 range: match.range,
                 color: UnifiedDraculaTheme.table,
                 priority: 11
             ))
         }
-        
+
+        // Also highlight table row pipes for consistency
+        let pipePattern = "^\\s*\\|.*\\|\\s*$"
+        guard let pipeRegex = try? NSRegularExpression(pattern: pipePattern, options: [.anchorsMatchLines]) else {
+            return highlights
+        }
+
+        let pipeMatches = pipeRegex.matches(in: text, range: range)
+        for match in pipeMatches {
+            // Only highlight the pipes themselves, not the content
+            let lineText = nsText.substring(with: match.range)
+            var offset = match.range.location
+            for char in lineText {
+                if char == "|" {
+                    highlights.append(SyntaxHighlight(
+                        range: NSRange(location: offset, length: 1),
+                        color: UnifiedDraculaTheme.table,
+                        priority: 11
+                    ))
+                }
+                offset += 1
+            }
+        }
+
         return highlights
     }
     

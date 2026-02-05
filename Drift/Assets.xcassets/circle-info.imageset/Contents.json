@@ -2,11 +2,7 @@
   "images" : [
     {
       "filename" : "circle-info.svg",
-      "idiom" : "universal",
-      "universal" : {
-        "memory" : 0,
-        "scale" : 1
-      }
+      "idiom" : "universal"
     }
   ],
   "info" : {
